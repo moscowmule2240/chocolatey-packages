@@ -33,9 +33,13 @@ jobs:
       - name: Install prerequisites (AU + checksum)
         run: |
           Set-ExecutionPolicy Bypass -Scope Process -Force
-          Install-PackageProvider -Name NuGet -Force | Out-Null
-          # Chocolatey Automatic Updater. If 'AU' ever fails to resolve, swap to 'Chocolatey-AU'.
-          Install-Module AU -Force
+          [Net.ServicePointManager]::SecurityProtocol = 3072   # TLS 1.2
+          # The NuGet provider ships on the runner; bootstrapping it explicitly fails
+          # under pwsh 7, so make it best-effort and rely on the preinstalled provider.
+          Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -ErrorAction SilentlyContinue | Out-Null
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction SilentlyContinue
+          # Chocolatey Automatic Updater (legacy 'AU'; provides Import-Module AU). Newer fork: 'Chocolatey-AU'.
+          Install-Module AU -Force -Scope CurrentUser
           choco install checksum -y --no-progress
 
       - name: Run AU update (detect + repack if newer)
