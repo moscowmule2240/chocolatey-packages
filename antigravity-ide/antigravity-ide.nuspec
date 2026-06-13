@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>antigravity-ide</id>
+    <version>2.0.4</version>
+    <packageSourceUrl>https://github.com/moscowmule2240/chocolatey-packages/tree/main/antigravity-ide</packageSourceUrl>
+    <owners>moscowmule2240</owners>
+    <title>Antigravity IDE</title>
+    <authors>Google</authors>
+    <projectUrl>https://antigravity.google/</projectUrl>
+    <copyright>Copyright (c) 2025-2026 Google LLC</copyright>
+    <licenseUrl>https://antigravity.google/terms</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <docsUrl>https://antigravity.google/docs/ide-getting-started</docsUrl>
+    <releaseNotes>https://antigravity.google/changelog/</releaseNotes>
+    <tags>antigravity ide editor ai gemini google vscode agent admin</tags>
+    <summary>Antigravity IDE - Google's agentic, agent-first AI IDE with async parallel agents and a browser agent, powered by Gemini 3.</summary>
+    <description>Antigravity IDE is the agentic development environment of Google Antigravity, built for the agent-first era and powered by Google's Gemini 3 models. It integrates AI agents directly into your workspace and gives them the tools to operate autonomously across the editor, terminal, and browser, with an emphasis on verification and higher-level communication through tasks and artifacts.
+
+## Main features
+
+- **AI-powered IDE** - a full AI-powered editor with the features developers rely on, including the **Agent** and **Tab** (a powerful autocomplete) modalities.
+- **Asynchronous agents** - local agents that work in parallel across all of your workspaces.
+- **Browser agent** - an agent that can drive the browser to accomplish dev tasks such as dashboard reads, SCM actions, and UI testing.
+
+Agents communicate through **Artifacts** - rich markdown files, diff views, architecture diagrams, images, and browser recordings - so you can verify their work at a glance.
+
+## This is a community-maintained package
+
+This package downloads the official `Antigravity IDE.exe` installer directly from Google's servers. It is **not** affiliated with or endorsed by Google. "Antigravity", "Gemini" and "Google" are trademarks of Google LLC.</description>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

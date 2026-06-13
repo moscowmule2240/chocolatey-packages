@@ -1,0 +1,8 @@
+# Built packages
+*.nupkg
+
+# Downloaded binaries (fetched at install time, never committed)
+**/tools/*.exe
+
+# Chocolatey logs
+*.log
