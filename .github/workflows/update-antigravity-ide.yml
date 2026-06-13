@@ -8,7 +8,7 @@ on:
   workflow_dispatch: {}        # manual run
   # Scheduled runs are off. Uncomment the two lines below to enable them.
   # schedule:
-  #   - cron: "0 2 * * *"      # daily at 02:00 UTC
+  #   - cron: "*/5 * * * *"    # every 5 minutes
 
 permissions:
   contents: write              # commit the version bump back
