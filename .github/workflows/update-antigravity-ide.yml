@@ -18,8 +18,7 @@ concurrency:
 
 jobs:
   update:
-    # Pinned: windows-latest is being redirected to the windows-2025 image (2026-06).
-    runs-on: windows-2025
+    runs-on: windows-latest
     defaults:
       run:
         shell: pwsh
