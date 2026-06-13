@@ -22,10 +22,16 @@ workflow runs `update.ps1` daily and on new releases bumps the `url`/`checksum`/
 `<version>` and repacks automatically — see the repo-level
 [Automation section](../README.md#automation-auto-update-on-a-schedule).
 
+**Architectures:** one nupkg covers both **windows-x64** and **windows-arm64** —
+`chocolateyinstall.ps1` picks the right build at install time (ARM64 is detected via
+`PROCESSOR_ARCHITECTURE` / `PROCESSOR_ARCHITEW6432`, so it works even when Chocolatey
+runs as an emulated x64 process on ARM hardware).
+
 `update.ps1` finds the latest version without any scraping service: the IDE's
-Windows x64 installer URL is a string literal in the download page's `main-*.js`
-bundle, so it reads the page → finds the bundle → extracts
-`.../antigravity/stable/<version>-<build>/windows-x64/Antigravity%20IDE.exe`.
+installer URLs are string literals in the download page's `main-*.js` bundle, so it
+reads the page → finds the bundle → extracts both the `windows-x64` and
+`windows-arm64` `.../stable/<version>-<build>/.../Antigravity%20IDE.exe` URLs and
+re-hashes both on a new release.
 
 ### Manual update / local test
 
