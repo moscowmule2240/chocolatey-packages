@@ -17,9 +17,13 @@ Each package lives in its own folder named after its Chocolatey id:
 <package-id>/
 ├── <package-id>.nuspec          # package metadata
 ├── README.md                    # package-specific notes (upstream source, quirks)
+├── update.ps1                   # AU updater: detect latest version, repack (optional)
 └── tools/
     ├── chocolateyinstall.ps1    # install logic
     └── chocolateyuninstall.ps1  # uninstall logic (if needed)
+
+scripts/Check-ChocolateyStatus.ps1   # shared: is this version already published?
+.github/workflows/                   # one CI workflow per automated package
 ```
 
 ---
@@ -64,6 +68,39 @@ choco push <package-id>.<version>.nupkg --source https://push.chocolatey.org/
 After pushing you'll get emails as it moves through validation → verification →
 virus scan → human review. If a step fails you have up to 35 days to fix and re-push.
 See https://docs.chocolatey.org/en-us/community-repository/moderation/
+
+## Automation (auto-update on a schedule)
+
+A package can keep itself up to date via a GitHub Actions workflow under
+`.github/workflows/`. Currently set up for **antigravity-ide**
+([`update-antigravity-ide.yml`](.github/workflows/update-antigravity-ide.yml)).
+
+Each daily run (02:00 UTC, or manual via *Actions → Run workflow*) on a
+`windows-latest` runner:
+
+1. installs the [Chocolatey **AU**](https://github.com/chocolatey-community/chocolatey-au) module,
+2. runs the package's `update.ps1` — detects the latest upstream version, and if
+   it's newer than the nuspec, rewrites the install script's `url`/`checksum` +
+   the nuspec `<version>` and repacks the `.nupkg`,
+3. test-installs and uninstalls the new package,
+4. checks whether that version is already on Chocolatey.org (`scripts/Check-ChocolateyStatus.ps1`),
+5. **pushes** it (only if `CHOCO_API_KEY` is set — see below), and
+6. commits the version bump back to the repo with `[skip ci]`.
+
+> antigravity-ide needs **no scraping service**: its installer URL is read straight
+> from the download page's JS bundle, so version detection is free and key-less.
+
+### Required setup before it can publish
+
+1. **Create a Chocolatey account** and generate an API key (Account → API Keys).
+2. Add it as a repo secret: *Settings → Secrets and variables → Actions →
+   New repository secret*, name **`CHOCO_API_KEY`**. (This is something only you
+   can do — never paste the key into code or commits.)
+
+Until that secret exists the workflow runs fine but **skips the push** (it logs a
+warning). Also do the **first publish manually** (see *Publish* above) — AU only
+acts on versions *newer* than the nuspec, so it won't push the current `2.0.4`;
+it takes over from the next release onward.
 
 ## Conventions & notes
 

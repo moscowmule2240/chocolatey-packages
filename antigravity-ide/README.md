@@ -17,14 +17,24 @@ Google's servers at install time.
 
 ## Updating to a new upstream version
 
-The IDE download URL is version-pinned (no public "latest" manifest found). Grab the
-new `Antigravity IDE.exe` URL (e.g. from the hub app's "install IDE" prompt), then
-recompute the checksum and bump the nuspec `<version>`:
+**Automated.** The [`update-antigravity-ide.yml`](../.github/workflows/update-antigravity-ide.yml)
+workflow runs `update.ps1` daily and on new releases bumps the `url`/`checksum`/
+`<version>` and repacks automatically — see the repo-level
+[Automation section](../README.md#automation-auto-update-on-a-schedule).
 
-```bash
-URL='https://edgedl.me.gvt1.com/edgedl/release2/.../windows-x64/Antigravity%20IDE.exe'
-curl -fsSL -o ide.exe "$URL" && shasum -a 256 ide.exe   # -> SHA256 for chocolateyinstall.ps1
+`update.ps1` finds the latest version without any scraping service: the IDE's
+Windows x64 installer URL is a string literal in the download page's `main-*.js`
+bundle, so it reads the page → finds the bundle → extracts
+`.../antigravity/stable/<version>-<build>/windows-x64/Antigravity%20IDE.exe`.
+
+### Manual update / local test
+
+```powershell
+Install-Module AU -Scope CurrentUser   # one-time
+cd antigravity-ide
+./update.ps1                            # detect latest, rewrite url/checksum, repack
 ```
 
-Then update `tools/chocolateyinstall.ps1` (URL + checksum) and `<version>` in
+Or fully by hand: download the new `Antigravity IDE.exe`, `shasum -a 256` it, and
+edit `tools/chocolateyinstall.ps1` (URL + checksum) and `<version>` in
 `antigravity-ide.nuspec`.

@@ -6,3 +6,5 @@
 
 # Chocolatey logs
 *.log
+# ...but keep the automation's push history (committed by the workflow)
+!logs/pushed-versions.log
