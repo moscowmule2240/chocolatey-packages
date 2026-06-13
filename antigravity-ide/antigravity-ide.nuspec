@@ -8,6 +8,7 @@
     <title>Antigravity IDE</title>
     <authors>Google</authors>
     <projectUrl>https://antigravity.google/</projectUrl>
+    <iconUrl>https://cdn.jsdelivr.net/gh/moscowmule2240/chocolatey-packages@main/antigravity-ide/icon.png</iconUrl>
     <copyright>Copyright (c) 2025-2026 Google LLC</copyright>
     <licenseUrl>https://antigravity.google/terms</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>

@@ -62,6 +62,13 @@ function global:au_SearchReplace {
             "(?i)(\`$urlArm64\s*=\s*)'[^']*'"      = "`${1}'$($Latest.URLArm64)'"
             "(?i)(\`$checksumArm64\s*=\s*)'[^']*'" = "`${1}'$($Latest.ChecksumArm64)'"
         }
+        # Keep VERIFICATION.txt accurate so it never lags the actual binaries.
+        'tools\VERIFICATION.txt' = @{
+            "(?i)(windows-x64 url:\s*).*"                  = "`${1}$($Latest.URL64)"
+            "(?i)(windows-x64 checksum:\s*)[0-9a-f]{64}"   = "`${1}$($Latest.Checksum64)"
+            "(?i)(windows-arm64 url:\s*).*"                = "`${1}$($Latest.URLArm64)"
+            "(?i)(windows-arm64 checksum:\s*)[0-9a-f]{64}" = "`${1}$($Latest.ChecksumArm64)"
+        }
     }
 }
 
