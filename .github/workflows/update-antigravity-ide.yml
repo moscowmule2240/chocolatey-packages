@@ -18,7 +18,8 @@ concurrency:
 
 jobs:
   update:
-    runs-on: windows-latest
+    # Pinned: windows-latest is being redirected to the windows-2025 image (2026-06).
+    runs-on: windows-2025
     defaults:
       run:
         shell: pwsh
@@ -26,7 +27,7 @@ jobs:
       PKG_DIR: antigravity-ide
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5   # Node 24 (v4 ran on the deprecated Node 20)
         with:
           fetch-depth: 0
 
