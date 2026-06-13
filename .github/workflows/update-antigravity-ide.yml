@@ -6,8 +6,9 @@ name: Update antigravity-ide
 
 on:
   workflow_dispatch: {}        # manual run
-  schedule:
-    - cron: "0 2 * * *"        # daily at 02:00 UTC
+  # Scheduled runs are off. Uncomment the two lines below to enable them.
+  # schedule:
+  #   - cron: "0 2 * * *"      # daily at 02:00 UTC
 
 permissions:
   contents: write              # commit the version bump back
