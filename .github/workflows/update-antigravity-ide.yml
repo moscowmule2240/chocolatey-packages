@@ -6,8 +6,11 @@ name: Update antigravity-ide
 
 on:
   workflow_dispatch: {}        # manual run
-  schedule:
-    - cron: "0 2 * * *"        # daily at 02:00 UTC
+  # Daily auto-update is paused until the first antigravity-ide version is approved
+  # on the Chocolatey community feed (keeps the new-maintainer moderation queue tidy).
+  # Re-enable by uncommenting the two lines below:
+  # schedule:
+  #   - cron: "0 2 * * *"      # daily at 02:00 UTC
 
 permissions:
   contents: write              # commit the version bump back
