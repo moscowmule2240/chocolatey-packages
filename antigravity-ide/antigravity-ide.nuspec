@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>antigravity-ide</id>
-    <version>2.0.4</version>
+    <version>2.1.1</version>
     <packageSourceUrl>https://github.com/moscowmule2240/chocolatey-packages/tree/main/antigravity-ide</packageSourceUrl>
     <owners>moscowmule2240</owners>
     <title>Antigravity IDE</title>
@@ -16,19 +16,51 @@
     <releaseNotes>https://antigravity.google/changelog/</releaseNotes>
     <tags>antigravity ide editor ai gemini google vscode agent admin</tags>
     <summary>Antigravity IDE - Google's agentic, agent-first AI IDE with async parallel agents and a browser agent, powered by Gemini 3.</summary>
-    <description>Antigravity IDE is the agentic development environment of Google Antigravity, built for the agent-first era and powered by Google's Gemini 3 models. It integrates AI agents directly into your workspace and gives them the tools to operate autonomously across the editor, terminal, and browser, with an emphasis on verification and higher-level communication through tasks and artifacts.
+    <description><![CDATA[Community-maintained Chocolatey package for **Google Antigravity IDE** — Google's
+agentic, agent-first AI IDE that integrates AI agents across the editor, terminal, and
+browser (powered by Gemini 3). It downloads the official `Antigravity IDE.exe` from
+Google's servers at install time.
 
-## Main features
+> **Relationship to other Antigravity packages:** since Antigravity 2.0, Google ships
+> the platform as separate downloads ([official download page](https://antigravity.google/download)):
+> the main app — [`antigravity`](https://community.chocolatey.org/packages/antigravity)
+> (v2.x) — plus a standalone **CLI**, **IDE**, and **SDK**. This package is the
+> standalone **IDE** download (`Antigravity IDE.exe`), distinct from the `antigravity`
+> main-app build (`Antigravity-x64.exe`). In 1.x, `antigravity` *was* the IDE.
+>
+> This package is **not** affiliated with or endorsed by Google. "Antigravity",
+> "Gemini" and "Google" are trademarks of Google LLC.
 
-- **AI-powered IDE** - a full AI-powered editor with the features developers rely on, including the **Agent** and **Tab** (a powerful autocomplete) modalities.
-- **Asynchronous agents** - local agents that work in parallel across all of your workspaces.
-- **Browser agent** - an agent that can drive the browser to accomplish dev tasks such as dashboard reads, SCM actions, and UI testing.
+## Updating to a new upstream version
 
-Agents communicate through **Artifacts** - rich markdown files, diff views, architecture diagrams, images, and browser recordings - so you can verify their work at a glance.
+**Automated.** The [`update-antigravity-ide.yml`](../.github/workflows/update-antigravity-ide.yml)
+workflow runs `update.ps1` daily and on new releases bumps the `url`/`checksum`/
+`<version>` and repacks automatically — see the repo-level
+[Automation section](../README.md#automation-auto-update-on-a-schedule).
 
-## This is a community-maintained package
+**Architectures:** one nupkg covers both **windows-x64** and **windows-arm64** —
+`chocolateyinstall.ps1` picks the right build at install time (ARM64 is detected via
+`PROCESSOR_ARCHITECTURE` / `PROCESSOR_ARCHITEW6432`, so it works even when Chocolatey
+runs as an emulated x64 process on ARM hardware).
 
-This package downloads the official `Antigravity IDE.exe` installer directly from Google's servers. It is **not** affiliated with or endorsed by Google. "Antigravity", "Gemini" and "Google" are trademarks of Google LLC.</description>
+`update.ps1` finds the latest version without any scraping service: the IDE's
+installer URLs are string literals in the download page's `main-*.js` bundle, so it
+reads the page → finds the bundle → extracts both the `windows-x64` and
+`windows-arm64` `.../stable/<version>-<build>/.../Antigravity%20IDE.exe` URLs and
+re-hashes both on a new release.
+
+### Manual update / local test
+
+```powershell
+Install-Module AU -Scope CurrentUser   # one-time
+cd antigravity-ide
+./update.ps1                            # detect latest, rewrite url/checksum, repack
+```
+
+Or fully by hand: download the new `Antigravity IDE.exe`, `shasum -a 256` it, and
+edit `tools/chocolateyinstall.ps1` (URL + checksum) and `<version>` in
+`antigravity-ide.nuspec`.
+]]></description>
   </metadata>
   <files>
     <file src="tools\**" target="tools" />
