@@ -66,4 +66,7 @@ function global:au_SearchReplace {
 }
 
 # Checksums are computed in au_BeforeUpdate, so disable AU's own checksum step.
-Update-Package -ChecksumFor none
+# -NoReadme: AU otherwise overwrites the nuspec <description> with the package
+# folder's README.md (minus its first 2 lines). We keep a hand-curated,
+# user-facing <description> in the nuspec, so opt out of that behaviour.
+Update-Package -ChecksumFor none -NoReadme
