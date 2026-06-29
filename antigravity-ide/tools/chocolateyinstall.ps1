@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Stop'
 
 # Per-architecture installers. Kept in sync by ../update.ps1 (AU).
 $url64         = 'https://edgedl.me.gvt1.com/edgedl/release2/j0qc3/antigravity/stable/2.1.1-6123990880747520/windows-x64/Antigravity%20IDE.exe'
@@ -21,17 +21,33 @@ $packageArgs = @{
   validExitCodes = @(0, 3010, 1641)
 }
 
-Install-ChocolateyPackage @packageArgs
-
-# The installer auto-launches the IDE even in silent mode; close it so an
-# unattended `choco install` finishes cleanly. Best-effort, non-fatal.
-$timeout = 60
-$timer = [System.Diagnostics.Stopwatch]::StartNew()
-while ($timer.Elapsed.TotalSeconds -lt $timeout) {
-  if (Get-Process -Name 'Antigravity*' -ErrorAction SilentlyContinue) {
-    Start-Sleep -Seconds 5
-    Stop-Process -Name 'Antigravity*' -Force -ErrorAction SilentlyContinue
-    break
+# The Antigravity installer launches the IDE when it finishes - even in silent
+# mode - and in headless/unattended environments (e.g. the Chocolatey package
+# test VM) the install process does NOT return until that IDE window is closed,
+# so a plain silent install hangs until Chocolatey's timeout. Run a background
+# watchdog that keeps closing the auto-launched IDE *while* the installer runs,
+# so the install completes unattended. It spares the installer .exe itself
+# (which runs from under Temp\chocolatey); only the launched app is closed.
+$killer = Start-Job -ScriptBlock {
+  while ($true) {
+    Get-Process -Name 'Antigravity*' -ErrorAction SilentlyContinue |
+      Where-Object { $_.Path -and $_.Path -notlike '*\Temp\chocolatey\*' } |
+      Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 2
   }
-  Start-Sleep -Seconds 1
+}
+
+try {
+  Install-ChocolateyPackage @packageArgs
+}
+finally {
+  Stop-Job   $killer -ErrorAction SilentlyContinue
+  Remove-Job $killer -Force -ErrorAction SilentlyContinue
+  # Final sweep in case the IDE was (re)launched right as the installer exited.
+  # Wrapped so a transient access error here never masks the real install result.
+  try {
+    Get-Process -Name 'Antigravity*' -ErrorAction SilentlyContinue |
+      Where-Object { $_.Path -and $_.Path -notlike '*\Temp\chocolatey\*' } |
+      Stop-Process -Force -ErrorAction SilentlyContinue
+  } catch { }
 }
