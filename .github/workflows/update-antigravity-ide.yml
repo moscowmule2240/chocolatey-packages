@@ -6,12 +6,12 @@ name: Update antigravity-ide
 
 on:
   workflow_dispatch: {}        # manual run
-  # Auto-update is paused until the first antigravity-ide version is approved on the
-  # Chocolatey community feed (keeps the new-maintainer moderation queue tidy).
-  # Re-enable by uncommenting the two lines below. */5 is GitHub's minimum cron
-  # interval (every 5 min); scheduled runs are best-effort and may be delayed under load.
-  # schedule:
-  #   - cron: "*/5 * * * *"    # every 5 minutes
+  # Auto-update enabled 2026-07-13 (antigravity-ide 2.1.1 approved on the Chocolatey
+  # community feed). */5 is GitHub's minimum cron interval (every 5 min); scheduled
+  # runs are best-effort and may be delayed under load. A run only pushes when a newer
+  # upstream version exists, so it no-ops until Antigravity ships a version > the nuspec.
+  schedule:
+    - cron: "*/5 * * * *"    # every 5 minutes
 
 permissions:
   contents: write              # commit the version bump back
