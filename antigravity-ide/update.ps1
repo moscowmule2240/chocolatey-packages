@@ -26,25 +26,90 @@ $DownloadPage = 'https://antigravity.google/download'
 $Headers      = @{ 'User-Agent' = 'Mozilla/5.0' }
 $Stable       = 'https://edgedl\.me\.gvt1\.com/edgedl/release2/j0qc3/antigravity/stable'
 
+# antigravity.google is served through Google Frontend with a 10-minute shared
+# edge cache, and it occasionally answers 200 with a body that is missing the
+# markup we scrape (observed ~3% of CI runs). Retry those, with growing delays.
+$RetryDelaysSeconds = @(5, 15, 30)
+
+<#
+  Fetches $Uri and hands the body to $Validate, which returns the extracted
+  value on success or $null when the body does not contain what we need.
+
+  A $null verdict is treated exactly like a failed request: both are retried,
+  because the failure we are guarding against is a *successful* response whose
+  body is short. Retries append a cache-buster and ask the edge to revalidate,
+  so we do not just re-read the same bad cached copy. Note that
+  Invoke-WebRequest -MaximumRetryCount would not help here: it only retries on
+  HTTP error status codes.
+#>
+function global:Get-ValidatedContent {
+    param(
+        [Parameter(Mandatory)][string]      $Uri,
+        [Parameter(Mandatory)][scriptblock] $Validate,
+        [Parameter(Mandatory)][string]      $What
+    )
+
+    $attempts = $RetryDelaysSeconds.Count + 1
+    $lastProblem = 'no attempt was made'
+
+    for ($i = 0; $i -lt $attempts; $i++) {
+        if ($i -gt 0) {
+            $delay = $RetryDelaysSeconds[$i - 1]
+            Write-Host "  $What not found ($lastProblem); retrying in ${delay}s [$($i + 1)/$attempts]"
+            Start-Sleep -Seconds $delay
+        }
+
+        $requestUri     = $Uri
+        $requestHeaders = $Headers
+        if ($i -gt 0) {
+            $separator      = if ($Uri.Contains('?')) { '&' } else { '?' }
+            $requestUri     = "$Uri$separator" + 'cb=' + [guid]::NewGuid().ToString('N')
+            $requestHeaders = $Headers + @{ 'Cache-Control' = 'no-cache'; 'Pragma' = 'no-cache' }
+        }
+
+        try {
+            $response = Invoke-WebRequest -Uri $requestUri -Headers $requestHeaders -UseBasicParsing
+        } catch {
+            $lastProblem = "request failed: $($_.Exception.Message)"
+            continue
+        }
+
+        $content = [string]$response.Content
+        $result  = & $Validate $content
+        if ($result) { return $result }
+
+        # Keep the tail: the markup we scrape sits at the very end of the
+        # document, so a truncated body is the prime suspect and this is the
+        # evidence that tells us so.
+        $tail = if ($content.Length -gt 200) { $content.Substring($content.Length - 200) } else { $content }
+        $lastProblem = "HTTP $([int]$response.StatusCode), $($content.Length) bytes, ends with: $tail"
+    }
+
+    throw "Could not find $What at $Uri after $attempts attempts. Last response: $lastProblem"
+}
+
 function global:au_GetLatest {
     # 1) The download page references a content-hashed main-*.js bundle.
-    $html   = (Invoke-WebRequest -Uri $DownloadPage -Headers $Headers -UseBasicParsing).Content
-    $bundle = [regex]::Match($html, 'main-[A-Za-z0-9]+\.js').Value
-    if (-not $bundle) { throw "Could not find the main-*.js bundle on $DownloadPage" }
+    $bundle = Get-ValidatedContent -Uri $DownloadPage -What 'the main-*.js bundle' -Validate {
+        param($html)
+        [regex]::Match($html, 'main-[A-Za-z0-9]+\.js').Value
+    }
 
     # 2) Both per-arch IDE installer URLs are string literals inside that bundle,
     #    e.g. .../stable/2.0.4-6381998290370560/windows-x64/Antigravity%20IDE.exe
-    $js  = (Invoke-WebRequest -Uri "https://antigravity.google/$bundle" -Headers $Headers -UseBasicParsing).Content
-    $x64 = [regex]::Match($js, "$Stable/(\d+\.\d+\.\d+)-\d+/windows-x64/Antigravity%20IDE\.exe")
-    $arm = [regex]::Match($js, "$Stable/\d+\.\d+\.\d+-\d+/windows-arm64/Antigravity%20IDE\.exe")
-    if (-not $x64.Success) { throw "Could not find the windows-x64 URL in $bundle" }
-    if (-not $arm.Success) { throw "Could not find the windows-arm64 URL in $bundle" }
-
-    return @{
-        Version  = $x64.Groups[1].Value
-        URL64    = $x64.Value
-        URLArm64 = $arm.Value
+    $urls = Get-ValidatedContent -Uri "https://antigravity.google/$bundle" -What 'the windows-x64/arm64 installer URLs' -Validate {
+        param($js)
+        $x64 = [regex]::Match($js, "$Stable/(\d+\.\d+\.\d+)-\d+/windows-x64/Antigravity%20IDE\.exe")
+        $arm = [regex]::Match($js, "$Stable/\d+\.\d+\.\d+-\d+/windows-arm64/Antigravity%20IDE\.exe")
+        if (-not ($x64.Success -and $arm.Success)) { return $null }
+        @{
+            Version  = $x64.Groups[1].Value
+            URL64    = $x64.Value
+            URLArm64 = $arm.Value
+        }
     }
+
+    return $urls
 }
 
 function global:au_BeforeUpdate {
