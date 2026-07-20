@@ -2,9 +2,13 @@
   AU (Chocolatey Automatic Updater) script for the antigravity-ide package.
 
   Detects the latest Antigravity IDE version directly from the official download
-  page. That page is a JavaScript SPA, but the real installer URLs are hard-coded
-  as string literals inside its content-hashed main-*.js bundle, so we can read
-  them with plain web requests - no ScraperAPI / paid API key needed.
+  page. The real per-arch installer URLs are embedded as plain string literals
+  in that page's HTML, so we can read them with a plain web request - no
+  ScraperAPI / paid API key needed.
+
+  (Until ~2026-07-20 the page was a JavaScript SPA that hid the URLs inside a
+  content-hashed main-*.js bundle, requiring a two-step scrape. The site was
+  rebuilt on Astro and now ships the URLs in the download page itself.)
 
   Keeps BOTH the windows-x64 and windows-arm64 url/checksum in sync (the package
   picks the right one at install time), plus the nuspec <version>.
@@ -89,18 +93,16 @@ function global:Get-ValidatedContent {
 }
 
 function global:au_GetLatest {
-    # 1) The download page references a content-hashed main-*.js bundle.
-    $bundle = Get-ValidatedContent -Uri $DownloadPage -What 'the main-*.js bundle' -Validate {
+    # Both per-arch IDE installer URLs are plain string literals in the download
+    # page's HTML, e.g.
+    #   .../stable/2.1.1-6123990880747520/windows-x64/Antigravity%20IDE.exe
+    # The $Stable anchor pins the match to the edgedl .../antigravity/stable/
+    # path so we never pick up the unrelated antigravity-hub build that the same
+    # page links from storage.googleapis.com.
+    $urls = Get-ValidatedContent -Uri $DownloadPage -What 'the windows-x64/arm64 installer URLs' -Validate {
         param($html)
-        [regex]::Match($html, 'main-[A-Za-z0-9]+\.js').Value
-    }
-
-    # 2) Both per-arch IDE installer URLs are string literals inside that bundle,
-    #    e.g. .../stable/2.0.4-6381998290370560/windows-x64/Antigravity%20IDE.exe
-    $urls = Get-ValidatedContent -Uri "https://antigravity.google/$bundle" -What 'the windows-x64/arm64 installer URLs' -Validate {
-        param($js)
-        $x64 = [regex]::Match($js, "$Stable/(\d+\.\d+\.\d+)-\d+/windows-x64/Antigravity%20IDE\.exe")
-        $arm = [regex]::Match($js, "$Stable/\d+\.\d+\.\d+-\d+/windows-arm64/Antigravity%20IDE\.exe")
+        $x64 = [regex]::Match($html, "$Stable/(\d+\.\d+\.\d+)-\d+/windows-x64/Antigravity%20IDE\.exe")
+        $arm = [regex]::Match($html, "$Stable/\d+\.\d+\.\d+-\d+/windows-arm64/Antigravity%20IDE\.exe")
         if (-not ($x64.Success -and $arm.Success)) { return $null }
         @{
             Version  = $x64.Groups[1].Value
