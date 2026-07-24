@@ -80,8 +80,8 @@ A package can keep itself up to date via a GitHub Actions workflow under
 | antigravity-ide | [`update-antigravity-ide.yml`](.github/workflows/update-antigravity-ide.yml) | every 5 min |
 | typeless | [`update-typeless.yml`](.github/workflows/update-typeless.yml) | **paused** — manual only until the first publish is approved |
 
-Each daily run (02:00 UTC, or manual via *Actions → Run workflow*) on a
-`windows-latest` runner:
+Each run — on the schedule in the table above, or manual via *Actions → Run workflow*
+— does the following on a `windows-latest` runner:
 
 1. installs the [Chocolatey **AU**](https://github.com/chocolatey-community/chocolatey-au) module,
 2. runs the package's `update.ps1` — detects the latest upstream version, and if
@@ -106,8 +106,9 @@ Each daily run (02:00 UTC, or manual via *Actions → Run workflow*) on a
 
 Until that secret exists the workflow runs fine but **skips the push** (it logs a
 warning). Also do the **first publish manually** (see *Publish* above) — AU only
-acts on versions *newer* than the nuspec, so it won't push the current `2.0.4`;
-it takes over from the next release onward.
+acts on versions *newer* than the nuspec, so it never pushes the version already in
+the nuspec; it takes over from the next upstream release onward. (`typeless` is at
+that stage now; `antigravity-ide` is published and auto-updating.)
 
 ## Conventions & notes
 
