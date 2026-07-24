@@ -32,8 +32,15 @@ the filename comes from the feed's `path:`, and the checksum is the feed's own d
 costs no bandwidth: there is no need to download ~270 MB of installers to re-hash
 them.
 
-> Note the arm64 feed is `arm64.yml`, **not** the `latest-arm64.yml` that
-> electron-builder uses by default (that URL 404s here).
+Two upstream quirks worth knowing about:
+
+> - The arm64 feed is `arm64.yml`, **not** the `latest-arm64.yml` that
+>   electron-builder uses by default (that URL 404s here).
+> - Both feeds are served as `application/x-www-form-urlencoded`, not as text. PowerShell
+>   only gives `Invoke-WebRequest` a `[string]` `.Content` for text-ish content types, so
+>   these responses arrive as `[byte[]]` and have to be UTF-8 decoded by hand — casting
+>   with `[string]` silently yields `"112 100 100 ..."` (the decimal byte values joined by
+>   spaces) instead of the document.
 
 Releases are published one architecture at a time, so `update.ps1` refuses to build a
 package when the two feeds report different versions — it skips that run and picks the
