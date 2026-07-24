@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>typeless</id>
+    <version>2.1.0</version>
+    <packageSourceUrl>https://github.com/moscowmule2240/chocolatey-packages/tree/main/typeless</packageSourceUrl>
+    <owners>moscowmule2240</owners>
+    <title>Typeless</title>
+    <authors>Typeless</authors>
+    <projectUrl>https://www.typeless.com/</projectUrl>
+    <iconUrl>https://cdn.jsdelivr.net/gh/moscowmule2240/chocolatey-packages@main/typeless/icon.png</iconUrl>
+    <copyright>Copyright (c) 2026 Typeless</copyright>
+    <licenseUrl>https://www.typeless.com/terms</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <releaseNotes>https://www.typeless.com/help/release-notes</releaseNotes>
+    <tags>typeless dictation voice speech-to-text stt transcription ai productivity accessibility admin</tags>
+    <summary>Typeless - AI voice dictation that turns natural speech into polished, ready-to-send writing across every Windows app.</summary>
+    <description>Typeless is an AI voice dictation app for Windows. You speak naturally and it produces finished text - messages, emails, and documents that read as if they had been carefully typed - in real time, in whatever application you are currently writing in.
+
+## Main features
+
+- **Works everywhere you write** - dictate into any Windows application, not just a dedicated editor window.
+- **Cleans up speech automatically** - removes filler words ("um", "uh", "you know") and unnecessary repetition.
+- **Follows your corrections** - when you change your mind mid-sentence, it keeps only the final intended wording instead of transcribing both attempts.
+- **Auto-formats** - spoken lists, steps, and key points come out as structured text.
+- **Adapts to your style** - matches your tone and phrasing over time, and a personal dictionary teaches it names and domain terms.
+
+## Account and licensing
+
+Typeless requires an account. A free tier is available with a weekly word allowance; unlimited use is a paid subscription. This package installs the application only - it does not include or provide a subscription.
+
+## This is a community-maintained package
+
+This package downloads the official Typeless installer directly from the vendor's servers. It is **not** affiliated with or endorsed by Typeless. "Typeless" is a trademark of its respective owner.</description>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

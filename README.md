@@ -8,6 +8,7 @@ packages — one folder per package.
 | Package | Description | Details |
 |---------|-------------|---------|
 | [`antigravity-ide`](antigravity-ide/) | Google Antigravity IDE (editor surface) | [package README](antigravity-ide/README.md) |
+| [`typeless`](typeless/) | Typeless — AI voice dictation for Windows | [package README](typeless/README.md) |
 
 ## Repo layout
 
@@ -72,8 +73,12 @@ See https://docs.chocolatey.org/en-us/community-repository/moderation/
 ## Automation (auto-update on a schedule)
 
 A package can keep itself up to date via a GitHub Actions workflow under
-`.github/workflows/`. Currently set up for **antigravity-ide**
-([`update-antigravity-ide.yml`](.github/workflows/update-antigravity-ide.yml)).
+`.github/workflows/` — one per package:
+
+| Package | Workflow | Schedule |
+|---------|----------|----------|
+| antigravity-ide | [`update-antigravity-ide.yml`](.github/workflows/update-antigravity-ide.yml) | every 5 min |
+| typeless | [`update-typeless.yml`](.github/workflows/update-typeless.yml) | **paused** — manual only until the first publish is approved |
 
 Each daily run (02:00 UTC, or manual via *Actions → Run workflow*) on a
 `windows-latest` runner:
@@ -87,8 +92,10 @@ Each daily run (02:00 UTC, or manual via *Actions → Run workflow*) on a
 5. **pushes** it (only if `CHOCO_API_KEY` is set — see below), and
 6. commits the version bump back to the repo with `[skip ci]`.
 
-> antigravity-ide needs **no scraping service**: its installer URL is read straight
-> from the download page's JS bundle, so version detection is free and key-less.
+> Neither package needs a **scraping service**: antigravity-ide reads its installer
+> URLs straight off the official download page, and typeless reads the version from
+> electron-builder's `latest.yml` update feed. Version detection is free and key-less
+> for both.
 
 ### Required setup before it can publish
 

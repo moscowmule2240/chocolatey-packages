@@ -1,0 +1,135 @@
+name: Update typeless
+
+# Detects new Typeless releases, repacks + tests the package, and
+# (once the CHOCO_API_KEY secret is set) publishes it to the Chocolatey
+# community feed - then commits the version bump back to the repo.
+
+on:
+  workflow_dispatch: {}        # manual run
+  # Auto-update is PAUSED until typeless is first published and approved on the
+  # Chocolatey community feed (the first push has to be done by hand - see the
+  # repo README). AU only acts on versions newer than the nuspec, so until then a
+  # schedule would just no-op every few minutes. Re-enable by uncommenting once
+  # the initial submission is approved.
+  # schedule:
+  #   - cron: "*/5 * * * *"    # every 5 minutes
+
+permissions:
+  contents: write              # commit the version bump back
+
+concurrency:
+  group: update-typeless
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      PKG_DIR: typeless
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6   # current major; Node 24 (v4 ran on the deprecated Node 20)
+        with:
+          fetch-depth: 0
+
+      - name: Install prerequisites (AU + checksum)
+        run: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force
+          # PSResourceGet (ships in pwsh 7.4+) installs from PSGallery over NuGet v3
+          # natively - no PackageManagement 'NuGet' provider bootstrap needed.
+          # 'AU' is the Chocolatey Automatic Updater (provides Import-Module AU).
+          Install-PSResource -Name AU -TrustRepository
+          choco install checksum -y --no-progress
+
+      - name: Run AU update (detect + repack if newer)
+        run: '& "./$env:PKG_DIR/update.ps1"'
+
+      - name: Detect built package
+        id: pkg
+        run: |
+          $nupkg = Get-ChildItem -Path "$env:PKG_DIR/*.nupkg" -ErrorAction SilentlyContinue |
+                   Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $nupkg) {
+            Write-Host "No .nupkg produced - already at the latest version. Nothing to do."
+            "found=false" | Out-File $env:GITHUB_OUTPUT -Append
+            exit 0
+          }
+          $nuspec = Get-ChildItem -Path "$env:PKG_DIR/*.nuspec" | Select-Object -First 1
+          [xml]$ns = Get-Content $nuspec.FullName
+          "found=true"                              | Out-File $env:GITHUB_OUTPUT -Append
+          "id=$($ns.package.metadata.id)"           | Out-File $env:GITHUB_OUTPUT -Append
+          "version=$($ns.package.metadata.version)" | Out-File $env:GITHUB_OUTPUT -Append
+          "nupkg=$($nupkg.FullName)"                | Out-File $env:GITHUB_OUTPUT -Append
+          Write-Host "Built $($ns.package.metadata.id) v$($ns.package.metadata.version)"
+
+      # Step outputs are passed through env: (not interpolated into the shell
+      # body) so nothing is ever expanded straight into a run: command.
+      - name: Test install / uninstall
+        if: steps.pkg.outputs.found == 'true'
+        env:
+          PKG_ID: ${{ steps.pkg.outputs.id }}
+          PKG_VERSION: ${{ steps.pkg.outputs.version }}
+        run: |
+          $src = (Resolve-Path $env:PKG_DIR).Path
+          choco install $env:PKG_ID --version $env:PKG_VERSION -y --no-progress --source "$src"
+          if ($LASTEXITCODE -ne 0) { Write-Error "Install test failed"; exit 1 }
+          choco uninstall $env:PKG_ID -y --no-progress
+          if ($LASTEXITCODE -ne 0) { Write-Error "Uninstall test failed"; exit 1 }
+
+      - name: Check Chocolatey status
+        if: steps.pkg.outputs.found == 'true'
+        id: status
+        env:
+          PKG_ID: ${{ steps.pkg.outputs.id }}
+          PKG_VERSION: ${{ steps.pkg.outputs.version }}
+        run: |
+          $s = ./scripts/Check-ChocolateyStatus.ps1 -PackageId $env:PKG_ID -PackageVersion $env:PKG_VERSION
+          Write-Host "Status: $s"
+          "status=$s" | Out-File $env:GITHUB_OUTPUT -Append
+
+      - name: Push to Chocolatey
+        if: steps.pkg.outputs.found == 'true' && steps.status.outputs.status == 'PROCEED_WITH_PUSH'
+        id: push
+        env:
+          CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
+          NUPKG_PATH: ${{ steps.pkg.outputs.nupkg }}
+        run: |
+          if (-not $env:CHOCO_API_KEY) {
+            Write-Warning "CHOCO_API_KEY secret is not set - skipping push. Add it under Settings > Secrets and variables > Actions to enable publishing."
+            "pushed=false" | Out-File $env:GITHUB_OUTPUT -Append
+            exit 0
+          }
+          choco push "$env:NUPKG_PATH" --source https://push.chocolatey.org/ --api-key $env:CHOCO_API_KEY
+          if ($LASTEXITCODE -ne 0) { Write-Error "choco push failed"; exit 1 }
+          "pushed=true" | Out-File $env:GITHUB_OUTPUT -Append
+
+      - name: Record successful push
+        if: steps.push.outputs.pushed == 'true'
+        env:
+          PKG_ID: ${{ steps.pkg.outputs.id }}
+          PKG_VERSION: ${{ steps.pkg.outputs.version }}
+        run: |
+          New-Item -ItemType Directory -Path logs -Force | Out-Null
+          Add-Content -Path logs/pushed-versions.log -Value "$env:PKG_ID/$env:PKG_VERSION"
+
+      # Only commit the bump once it is published (or already on the feed), so a
+      # version that could not be pushed yet (e.g. CHOCO_API_KEY not set) is
+      # retried on the next run instead of being silently left behind.
+      - name: Commit version bump
+        if: steps.pkg.outputs.found == 'true' && (steps.push.outputs.pushed == 'true' || steps.status.outputs.status == 'SKIP_PUSH')
+        env:
+          PKG_ID: ${{ steps.pkg.outputs.id }}
+          PKG_VERSION: ${{ steps.pkg.outputs.version }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$env:PKG_DIR" logs
+          if (git diff --staged --quiet) {
+            Write-Host "No source changes to commit."
+          } else {
+            git commit -m "Auto-update $env:PKG_ID to $env:PKG_VERSION [skip ci]"
+            git push
+          }
