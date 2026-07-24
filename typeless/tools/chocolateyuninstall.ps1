@@ -10,12 +10,31 @@ $softwareName = 'Typeless*'
 
 if ($key.Count -eq 1) {
   $key | ForEach-Object {
+    # A per-user install records its uninstaller WITH a trailing argument:
+    #   "C:\Users\<u>\AppData\Local\Programs\Typeless\Uninstall Typeless.exe" /currentuser
+    # so the quotes cannot simply be stripped - that folds "/currentuser" into the
+    # path and yields a file name that does not exist. Split the quoted executable
+    # from its arguments and pass them separately; /currentuser is what tells the
+    # uninstaller to remove the per-user installation.
+    $uninstallString = $_.UninstallString.Trim()
+    if ($uninstallString -match '^"([^"]+)"\s*(.*)$') {
+      $file      = $Matches[1]
+      $extraArgs = $Matches[2].Trim()
+    } elseif ($uninstallString -match '^(\S+\.exe)\s*(.*)$') {
+      # Unquoted form - only well-defined when the path itself has no spaces.
+      $file      = $Matches[1]
+      $extraArgs = $Matches[2].Trim()
+    } else {
+      $file      = $uninstallString
+      $extraArgs = ''
+    }
+
     $packageArgs = @{
       packageName    = $packageName
       fileType       = 'exe'
-      # NSIS uninstaller (Uninstall Typeless.exe); strip surrounding quotes.
-      file           = ($_.UninstallString -replace '"', '')
-      silentArgs     = '/S'
+      file           = $file
+      # NSIS silent switch, plus whichever mode flag the registry recorded.
+      silentArgs     = ("/S $extraArgs").Trim()
       validExitCodes = @(0)
     }
     Uninstall-ChocolateyPackage @packageArgs

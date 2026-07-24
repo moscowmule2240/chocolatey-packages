@@ -49,6 +49,29 @@ release up once both sides have landed.
 The installer is **NSIS 3.04** (electron-builder's default Windows target), so the
 silent switch is `/S` for both install and uninstall.
 
+## Install behaviour — this is a per-user install
+
+Verified on Windows with 2.1.0: the installer is electron-builder's one-click
+**per-user** NSIS build. It does not ask for elevation and it installs into the
+profile of whoever runs it:
+
+| | |
+|---|---|
+| Install location | `%LOCALAPPDATA%\Programs\Typeless` |
+| Uninstall entry | **HKCU**`\Software\Microsoft\Windows\CurrentVersion\Uninstall\<guid>` |
+| `UninstallString` | `"…\Uninstall Typeless.exe" /currentuser` |
+
+Two consequences worth knowing:
+
+- **It lands in the calling user's profile, not machine-wide.** Elevation does not
+  change that (an elevated prompt is still the same user), so an interactive
+  `choco install` behaves as expected. But running Chocolatey as **SYSTEM** or as a
+  separate admin account — unattended deployment, some CI/MDM setups — installs it
+  into *that* account's profile, where the intended user will not see it.
+- **The `UninstallString` carries a `/currentuser` argument.** `chocolateyuninstall.ps1`
+  therefore splits the quoted executable from its arguments instead of just stripping
+  quotes; folding the argument into the path yields a file name that does not exist.
+
 ## Updating to a new upstream version
 
 **Automated.** The [`update-typeless.yml`](../.github/workflows/update-typeless.yml)
