@@ -80,8 +80,15 @@ function global:Get-ValidatedContent {
             continue
         }
 
-        $content = [string]$response.Content
-        $result  = & $Validate $content
+        # Invoke-WebRequest only hands back a [string] Content for text-ish content
+        # types; anything else arrives as [byte[]]. These feeds are served as
+        # application/x-www-form-urlencoded, so they take the byte[] path - and
+        # [string]-casting a byte[] yields "112 100 100 ..." (the decimal values
+        # joined by spaces), not the document. Decode explicitly instead.
+        $raw     = $response.Content
+        $content = if ($raw -is [byte[]]) { [System.Text.Encoding]::UTF8.GetString($raw) } else { [string]$raw }
+
+        $result = & $Validate $content
         if ($result) { return $result }
 
         $tail = if ($content.Length -gt 200) { $content.Substring($content.Length - 200) } else { $content }
