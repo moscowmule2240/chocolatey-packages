@@ -25,6 +25,12 @@
 - **Auto-formats** - spoken lists, steps, and key points come out as structured text.
 - **Adapts to your style** - matches your tone and phrasing over time, and a personal dictionary teaches it names and domain terms.
 
+## Install location
+
+Typeless ships a **per-user** installer: it installs into `%LOCALAPPDATA%\Programs\Typeless`
+for the account that runs the install, rather than machine-wide. Installing it as a
+different account (for example unattended as SYSTEM) puts it in that account's profile.
+
 ## Account and licensing
 
 Typeless requires an account. A free tier is available with a weekly word allowance; unlimited use is a paid subscription. This package installs the application only - it does not include or provide a subscription.
