@@ -12,6 +12,14 @@ vendor's servers at install time.
 > This package is **not** affiliated with or endorsed by Typeless. "Typeless" is a
 > trademark of its respective owner.
 
+## nuspec metadata URLs
+
+Moderation on 2.1.0 suggested (not required) adding `docsUrl`, `mailingListUrl`,
+`bugTrackerUrl` and `projectSourceUrl`. Only `docsUrl` applies here — Typeless is
+closed-source commercial software with no public issue tracker or mailing list, so
+the other three have nothing legitimate to point at and are deliberately omitted.
+(`https://www.typeless.com/contact` is a contact form, not an issue tracker.)
+
 ## Upstream layout
 
 The download page (`/downloads`) has no direct links: its buttons call

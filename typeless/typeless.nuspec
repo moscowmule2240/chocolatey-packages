@@ -12,6 +12,7 @@
     <copyright>Copyright (c) 2026 Typeless</copyright>
     <licenseUrl>https://www.typeless.com/terms</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <docsUrl>https://www.typeless.com/help</docsUrl>
     <releaseNotes>https://www.typeless.com/help/release-notes</releaseNotes>
     <tags>typeless dictation voice speech-to-text stt transcription ai productivity accessibility admin</tags>
     <summary>Typeless - AI voice dictation that turns natural speech into polished, ready-to-send writing across every Windows app.</summary>
