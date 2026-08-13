@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>antigravity-ide</id>
-    <version>2.5.2</version>
+    <version>2.5.4</version>
     <packageSourceUrl>https://github.com/moscowmule2240/chocolatey-packages/tree/main/antigravity-ide</packageSourceUrl>
     <owners>moscowmule2240</owners>
     <title>Antigravity IDE</title>
