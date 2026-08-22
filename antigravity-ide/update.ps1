@@ -21,76 +21,15 @@
   .github/workflows/update-antigravity-ide.yml.
 #>
 Import-Module AU
+Import-Module (Join-Path $PSScriptRoot '..' 'scripts' 'ChocoUpdate.psm1') -Force
+
 $ErrorActionPreference = 'Stop'
 
 # AU resolves the .nuspec relative to the current directory.
 Set-Location -Path $PSScriptRoot
 
 $DownloadPage = 'https://antigravity.google/download'
-$Headers      = @{ 'User-Agent' = 'Mozilla/5.0' }
 $Stable       = 'https://edgedl\.me\.gvt1\.com/edgedl/release2/j0qc3/antigravity/stable'
-
-# antigravity.google is served through Google Frontend with a 10-minute shared
-# edge cache, and it occasionally answers 200 with a body that is missing the
-# markup we scrape (observed ~3% of CI runs). Retry those, with growing delays.
-$RetryDelaysSeconds = @(5, 15, 30)
-
-<#
-  Fetches $Uri and hands the body to $Validate, which returns the extracted
-  value on success or $null when the body does not contain what we need.
-
-  A $null verdict is treated exactly like a failed request: both are retried,
-  because the failure we are guarding against is a *successful* response whose
-  body is short. Retries append a cache-buster and ask the edge to revalidate,
-  so we do not just re-read the same bad cached copy. Note that
-  Invoke-WebRequest -MaximumRetryCount would not help here: it only retries on
-  HTTP error status codes.
-#>
-function global:Get-ValidatedContent {
-    param(
-        [Parameter(Mandatory)][string]      $Uri,
-        [Parameter(Mandatory)][scriptblock] $Validate,
-        [Parameter(Mandatory)][string]      $What
-    )
-
-    $attempts = $RetryDelaysSeconds.Count + 1
-    $lastProblem = 'no attempt was made'
-
-    for ($i = 0; $i -lt $attempts; $i++) {
-        if ($i -gt 0) {
-            $delay = $RetryDelaysSeconds[$i - 1]
-            Write-Host "  $What not found ($lastProblem); retrying in ${delay}s [$($i + 1)/$attempts]"
-            Start-Sleep -Seconds $delay
-        }
-
-        $requestUri     = $Uri
-        $requestHeaders = $Headers
-        if ($i -gt 0) {
-            $separator      = if ($Uri.Contains('?')) { '&' } else { '?' }
-            $requestUri     = "$Uri$separator" + 'cb=' + [guid]::NewGuid().ToString('N')
-            $requestHeaders = $Headers + @{ 'Cache-Control' = 'no-cache'; 'Pragma' = 'no-cache' }
-        }
-
-        try {
-            $response = Invoke-WebRequest -Uri $requestUri -Headers $requestHeaders -UseBasicParsing
-        } catch {
-            $lastProblem = "request failed: $($_.Exception.Message)"
-            continue
-        }
-
-        $content = [string]$response.Content
-        $result  = & $Validate $content
-        if ($result) { return $result }
-
-        # Keep the tail: the markup we scrape sits at the very end of the
-        # document, so a truncated body is the prime suspect and this is the
-        # evidence that tells us so.
-        $tail = if ($content.Length -gt 200) { $content.Substring($content.Length - 200) } else { $content }
-        $lastProblem = "HTTP $([int]$response.StatusCode), $($content.Length) bytes, ends with: $tail"
-    }
-
-    throw "Could not find $What at $Uri after $attempts attempts. Last response: $lastProblem"
-}
 
 function global:au_GetLatest {
     # Both per-arch IDE installer URLs are plain string literals in the download
@@ -99,6 +38,11 @@ function global:au_GetLatest {
     # The $Stable anchor pins the match to the edgedl .../antigravity/stable/
     # path so we never pick up the unrelated antigravity-hub build that the same
     # page links from storage.googleapis.com.
+    #
+    # antigravity.google is served through Google Frontend with a 10-minute
+    # shared edge cache, and it occasionally answers 200 with a body that is
+    # missing the markup we scrape (observed ~3% of CI runs). Get-ValidatedContent
+    # retries those.
     $urls = Get-ValidatedContent -Uri $DownloadPage -What 'the windows-x64/arm64 installer URLs' -Validate {
         param($html)
         $x64 = [regex]::Match($html, "$Stable/(\d+\.\d+\.\d+)-\d+/windows-x64/Antigravity%20IDE\.exe")
@@ -122,14 +66,7 @@ function global:au_BeforeUpdate {
 }
 
 function global:au_SearchReplace {
-    @{
-        'tools\chocolateyinstall.ps1' = @{
-            "(?i)(\`$url64\s*=\s*)'[^']*'"         = "`${1}'$($Latest.URL64)'"
-            "(?i)(\`$checksum64\s*=\s*)'[^']*'"    = "`${1}'$($Latest.Checksum64)'"
-            "(?i)(\`$urlArm64\s*=\s*)'[^']*'"      = "`${1}'$($Latest.URLArm64)'"
-            "(?i)(\`$checksumArm64\s*=\s*)'[^']*'" = "`${1}'$($Latest.ChecksumArm64)'"
-        }
-    }
+    Get-DualArchSearchReplace -Latest $Latest
 }
 
 # Checksums are computed in au_BeforeUpdate, so disable AU's own checksum step.
