@@ -45,22 +45,39 @@ $java = Get-Command 'java.exe' -ErrorAction SilentlyContinue
 if (-not $java) {
     Write-Warning "Java was not found on PATH. $javaRequirement"
 } else {
-    $versionOutput = & $java.Source -version 2>&1 | Out-String
-
-    # 'java version "1.8.0_401"' for 8 and older, 'openjdk version "21.0.1"' for 9+.
-    $m = [regex]::Match($versionOutput, 'version "(\d+)(?:\.(\d+))?')
-    if ($m.Success) {
-        $major = [int]$m.Groups[1].Value
-        if ($major -eq 1 -and $m.Groups[2].Success) { $major = [int]$m.Groups[2].Value }
-
-        if ($major -lt 11) {
-            Write-Warning "Java $major was found on PATH. $javaRequirement"
-        }
-    } else {
-        Write-Warning "Could not read the version from 'java -version'. $javaRequirement"
+    # 'java -version' writes to stderr even when it succeeds. Capturing that with
+    # '2>&1 |' turns every line into an ErrorRecord, and with
+    # $ErrorActionPreference = 'Stop' the first one aborts the install - so a
+    # perfectly good JDK would fail the package. Redirect the stream to a file
+    # instead, which is what this package did before this check was rewritten.
+    $stderrFile    = [System.IO.Path]::GetTempFileName()
+    $versionOutput = ''
+    try {
+        Start-Process -FilePath $java.Source -ArgumentList '-version' `
+            -RedirectStandardError $stderrFile -NoNewWindow -Wait
+        $versionOutput = Get-Content -Path $stderrFile -Raw
+    } catch {
+        Write-Warning "Could not run 'java -version' ($($_.Exception.Message)). $javaRequirement"
+    } finally {
+        Remove-Item -Path $stderrFile -Force -ErrorAction SilentlyContinue
     }
 
-    if ($versionOutput -notmatch '64-Bit') {
-        Write-Warning "The Java on PATH does not report a 64-bit VM. $javaRequirement"
+    if ($versionOutput) {
+        # 'java version "1.8.0_401"' for 8 and older, 'openjdk version "21.0.1"' for 9+.
+        $m = [regex]::Match($versionOutput, 'version "(\d+)(?:\.(\d+))?')
+        if ($m.Success) {
+            $major = [int]$m.Groups[1].Value
+            if ($major -eq 1 -and $m.Groups[2].Success) { $major = [int]$m.Groups[2].Value }
+
+            if ($major -lt 11) {
+                Write-Warning "Java $major was found on PATH. $javaRequirement"
+            }
+        } else {
+            Write-Warning "Could not read the version from 'java -version'. $javaRequirement"
+        }
+
+        if ($versionOutput -notmatch '64-Bit') {
+            Write-Warning "The Java on PATH does not report a 64-bit VM. $javaRequirement"
+        }
     }
 }
