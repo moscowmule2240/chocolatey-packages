@@ -22,6 +22,35 @@
 - **Icon URLs use jsdelivr**, not raw GitHub: `https://cdn.jsdelivr.net/gh/moscowmule2240/chocolatey-packages@main/<pkg>/icon.png` (CPMR0076).
 - **Commit messages** follow the repository style: lowercase `<scope>: <imperative summary>`, English, no first person.
 
+## Execution environment (added at execution time)
+
+The machine this plan is executed on has **no `pwsh`**, and PowerShell is deliberately
+not being installed on it. Real-machine testing happens on Windows instead. Every step
+below that says "Run: `pwsh ...`" is therefore read as follows.
+
+| Plan step says | Actually do |
+| --- | --- |
+| `Invoke-Pester ...` | Cannot run here. The `Tests` workflow (Task 8) runs it on `windows-latest`. Until that workflow exists and has run, the tests are unverified — say so rather than implying they passed. |
+| `./<pkg>/update.ps1` | Cannot run here. Verify through the package's own workflow (`workflow_dispatch`, already declared on both existing workflows) or on the Windows machine. |
+| Diffing generated files before/after a migration | Cannot run here. The comparison moves to the Windows machine; the commands are unchanged, only the host is. |
+
+**Task 8 moves to the front.** The CI workflow is what makes any of the tests runnable, so
+it is created first (as Task 1 in execution order) rather than last. The task text itself
+is unchanged.
+
+What can still be verified locally, and must be:
+
+- `.nuspec` and workflow YAML parse (Python's `xml.dom.minidom` / `yaml.safe_load`).
+- The CPMR0010 string scan over `jadx/`.
+- Regex behaviour: PowerShell uses .NET regex, and the patterns in this plan use only
+  constructs that behave identically in Python's `re`, so the tag/digest/asset patterns
+  can be exercised against the real strings before committing.
+- Balanced quotes and braces in every `.ps1` and `.psm1`, as a crude substitute for a
+  parser.
+
+**Nothing is claimed to pass until CI or the Windows machine says so.** A step whose
+verification could not be run is reported as unverified, never as done.
+
 ## File Structure
 
 | File | Responsibility |
