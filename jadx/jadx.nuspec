@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>jadx</id>
+    <version>1.5.6</version>
+    <packageSourceUrl>https://github.com/moscowmule2240/chocolatey-packages/tree/main/jadx</packageSourceUrl>
+    <owners>moscowmule2240</owners>
+
+    <title>JADX (Portable)</title>
+    <authors>Skylot</authors>
+    <projectUrl>https://github.com/skylot/jadx</projectUrl>
+    <iconUrl>https://cdn.jsdelivr.net/gh/moscowmule2240/chocolatey-packages@main/jadx/icon.png</iconUrl>
+    <copyright>Skylot</copyright>
+    <licenseUrl>https://github.com/skylot/jadx/blob/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <bugTrackerUrl>https://github.com/skylot/jadx/issues</bugTrackerUrl>
+    <docsUrl>https://github.com/skylot/jadx/wiki</docsUrl>
+    <tags>java decompiler android dex apk smali reverse-engineering foss</tags>
+    <summary>Command line and GUI tools to produce Java source code from Android Dex and Apk files.</summary>
+    <description><![CDATA[
+JADX decompiles Dalvik bytecode to Java source from APK, dex, aar, aab and zip
+files, and decodes AndroidManifest.xml and other resources from `resources.arsc`.
+It ships both a command line tool (`jadx`) and a GUI (`jadx-gui`) with code
+navigation, search and deobfuscation.
+
+This is a portable package: it unpacks the official release archive and registers
+`jadx` and `jadx-gui` on PATH.
+
+### Java is required and is not installed by this package
+
+jadx needs **Java 11 or later, 64-bit**. This package declares no Java
+dependency, because the Chocolatey Community Repository has no package that means
+"any Java 11 or later" - the `javaruntime` metapackage resolves to Java 8, which
+jadx cannot run on. Depending on one specific JDK id would install a second JDK
+for the many users who already have one.
+
+If Java is missing or too old, installation still succeeds and a warning is
+printed; jadx will not start until a suitable JDK is on PATH. Any 64-bit Java 11+
+distribution works - for example Temurin, Zulu, the Microsoft Build of OpenJDK,
+or Oracle Java.
+]]></description>
+    <releaseNotes>https://github.com/skylot/jadx/releases</releaseNotes>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
