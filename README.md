@@ -8,6 +8,7 @@ packages — one folder per package.
 | Package | Description | Details |
 |---------|-------------|---------|
 | [`antigravity-ide`](antigravity-ide/) | Google Antigravity IDE (editor surface) | [package README](antigravity-ide/README.md) |
+| [`jadx`](jadx/) | JADX — Dex to Java decompiler (CLI + GUI) | [package README](jadx/README.md) |
 | [`typeless`](typeless/) | Typeless — AI voice dictation for Windows | [package README](typeless/README.md) |
 
 ## Repo layout
@@ -23,9 +24,26 @@ Each package lives in its own folder named after its Chocolatey id:
     ├── chocolateyinstall.ps1    # install logic
     └── chocolateyuninstall.ps1  # uninstall logic (if needed)
 
-scripts/Check-ChocolateyStatus.ps1   # shared: is this version already published?
-.github/workflows/                   # one CI workflow per automated package
+scripts/
+├── Check-ChocolateyStatus.ps1       # shared: is this version already published?
+├── ChocoUpdate.psm1                 # shared: retrying fetch + dual-arch replacements
+└── GitHubRelease.psm1               # shared: GitHub Releases as an update source
+
+tests/                               # Pester tests for the shared modules
+.github/workflows/                   # one CI workflow per automated package, plus Tests
 ```
+
+The two modules under `scripts/` hold what every `update.ps1` would otherwise
+duplicate. `ChocoUpdate.psm1` owns the HTTP transport: it retries a response that
+arrives intact but incomplete — a 200 whose body is truncated — and, when it
+finally gives up, reports the status, the body length and the last 200
+characters. That diagnostic has been what identified more than one real failure,
+so it should not be trimmed. `GitHubRelease.psm1` turns a repository into a
+version, an asset and a checksum, taking the checksum from the release asset's
+`digest` field so no download is needed to compute it.
+
+Run the tests with `Invoke-Pester ./tests`; CI runs them on `windows-latest` for
+every change under `scripts/`, `tests/` or any `update.ps1`.
 
 ---
 
