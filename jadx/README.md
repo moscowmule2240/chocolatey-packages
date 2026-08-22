@@ -55,3 +55,14 @@ following the Chocolatey Package Triage Process.
   explicitly with `Uninstall-BinFile`.
 - CPMR0010 is a plain string match: never write a Chocolatey install command in
   these scripts, not even inside a comment or a warning message.
+- **Never pipe `java -version` through `2>&1`.** It writes to stderr even when it
+  succeeds, and under `$ErrorActionPreference = 'Stop'` each captured line
+  becomes an ErrorRecord that aborts the install — so a working JDK fails the
+  package. Use `Start-Process -RedirectStandardError` and read the file. This was
+  shipped broken once, on 2026-08-22: the shims were registered and then the
+  install died on `openjdk version "21.0.11"`, which is a healthy JDK. The same
+  applies to any native command whose normal output goes to stderr.
+- The CI `Test install / uninstall` step only runs when AU produced a `.nupkg`,
+  which means it is skipped whenever the nuspec already matches upstream. A new
+  package therefore gets no install coverage from CI on its first commit — test
+  it on a real Windows machine before trusting it.
