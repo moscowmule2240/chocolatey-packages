@@ -29,6 +29,15 @@ package id, so having `temurin21` would not satisfy it.
 Every other Java 11+ tool on the repository does the same. `ghidra`, `zap`,
 `jenkins` and `openrefine` all declare no Java dependency.
 
+There is a further reason, which a dependency could never cover: most JDKs on a
+developer's machine are not installed through Chocolatey at all. During testing
+this package found a working Temurin 21 that `mise` had installed under
+`%LOCALAPPDATA%\mise\installs\java\`, and which `choco list` does not report.
+A `temurin11` dependency would have installed a second JDK next to it, because
+dependency resolution matches on package id and can only see packages Chocolatey
+itself manages. Probing `java.exe` on PATH finds the runtime regardless of which
+tool installed it.
+
 The install script detects Java and prints a warning when it is missing or older
 than 11. It does not fail the installation: unpacking and shim registration do
 not need Java, and failing there would break the Chocolatey verifier, which runs
@@ -66,3 +75,21 @@ following the Chocolatey Package Triage Process.
   which means it is skipped whenever the nuspec already matches upstream. A new
   package therefore gets no install coverage from CI on its first commit — test
   it on a real Windows machine before trusting it.
+- When re-testing after a fix, run `choco pack` again. `choco install -s .`
+  installs from the `.nupkg` in the directory, not from the working tree, so a
+  stale package silently reproduces the bug you just fixed.
+
+## Verified on Windows, 2026-08-23
+
+Against 1.5.6 with `choco install jadx --version 1.5.6 -s . -y --force`:
+
+| Case | Result |
+| --- | --- |
+| Java 21 present (Temurin via mise) | installs, no warning |
+| `jadx --version` | `1.5.6` |
+| Shims and start-menu shortcut | `jadx.exe`, `jadx-gui.exe`, `JADX GUI.lnk` under `CommonPrograms` |
+| `choco uninstall jadx -y` | both shims removed, `Get-Command jadx` finds nothing |
+| **No Java on PATH** | **warns, and the install still succeeds** |
+
+The last row is the one that matters: it is the condition the Chocolatey verifier
+runs under, and a failure there is what closed 1.5.3 and 1.5.6.
