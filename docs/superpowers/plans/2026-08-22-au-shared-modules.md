@@ -388,7 +388,7 @@ Export-ModuleMember -Function Get-ValidatedContent, Get-DualArchSearchReplace
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `pwsh -NoProfile -Command "Invoke-Pester ./tests/ChocoUpdate.Tests.ps1 -Output Detailed"`
-Expected: PASS, 7 tests.
+Expected: PASS, 9 tests. (The plan originally specified 7; two were added during implementation - one proving the x64 pattern does not touch the arm64 line, one covering a request that throws.)
 
 If `Mock -ModuleName ChocoUpdate` fails to intercept `Invoke-WebRequest`, the module name must match the file base name — confirm with `Get-Module ChocoUpdate`. Do not switch the tests to real HTTP.
 
@@ -680,7 +680,7 @@ Export-ModuleMember -Function Get-GitHubLatestRelease, Get-ReleaseVersion, Selec
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `pwsh -NoProfile -Command "Invoke-Pester ./tests/GitHubRelease.Tests.ps1 -Output Detailed"`
-Expected: PASS, 14 tests.
+Expected: PASS, 18 tests. (The plan originally specified 14; four were added during implementation - a prerelease tag must throw rather than be truncated, the plain archive must not resolve to the jre-bundled one, an uppercase digest must be lowercased, and a non-JSON body must be retried rather than parsed.)
 
 - [ ] **Step 5: Check the spec's transitive-import claim empirically**
 
@@ -1602,7 +1602,7 @@ Expected: `name: Tests`, `runs-on: windows-latest`, `steps: 3`.
 pwsh -NoProfile -Command "Invoke-Pester ./tests -Output Detailed"
 ```
 
-Expected: all tests pass, 21 total (7 from Task 1, 14 from Task 2).
+Expected: all tests pass, 27 total (9 from Task 1, 18 from Task 2).
 
 - [ ] **Step 4: Commit**
 
