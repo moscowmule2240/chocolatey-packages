@@ -59,9 +59,13 @@ Against 6.2.0 with `choco install radare2 --version 6.2.0 -s . -y --force`:
 | --- | --- |
 | x64 install | selects `radare2-6.2.0-w64.zip`; `r2 -v` reports `windows-x86_64` |
 | `--x86` on the same x64 machine | selects `radare2-6.2.0-w32.zip`; `r2 -v` reports `windows-x86_32` |
-| Shims | 17 — sixteen created by ShimGen from `bin/*.exe`, plus the explicit `r2` |
+| Shims | 17 — measured in `chocolatey\bin`: `r2`, `r2agent`, `r2pm`, `r2r`, `rabin2`, `radare2`, `radiff2`, `rafind2`, `rafs2`, `ragg2`, `rahash2`, `rapatch2`, `rarun2`, `rasign2`, `rasm2`, `ravc2`, `rax2` |
 | `r2pm`, `r2r`, `rafs2`, `rapatch2` | present — these are the four Scoop's hand-written list omits |
 | `choco uninstall radare2 -y` | all 17 gone, though only `r2` is removed explicitly |
+
+`radare2.exe` ends up reachable under two names — `radare2` from the automatic
+scan and `r2` from the explicit `Install-BinFile` — which is why sixteen
+executables produce seventeen shims.
 
 Two design choices were confirmed rather than assumed by this run. The automatic
 shims really do cover every `.exe` in the extracted archive, so enumerating them
