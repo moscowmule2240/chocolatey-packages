@@ -166,3 +166,59 @@ Describe 'Get-GitHubLatestRelease' {
         $script:tries     | Should -Be 2
     }
 }
+
+Describe 'GitHubRelease against a radare2-shaped release' {
+    BeforeAll {
+        $script:r2 = [pscustomobject]@{
+            tag_name = '6.2.0'
+            assets   = @(
+                [pscustomobject]@{
+                    name   = 'radare2-6.2.0-w64.zip'
+                    digest = 'sha256:adb1ffd158066ea41316fa33b6d23b362aa9258df800721f7d15a42eefdd9202'
+                    browser_download_url = 'https://github.com/radareorg/radare2/releases/download/6.2.0/radare2-6.2.0-w64.zip'
+                },
+                [pscustomobject]@{
+                    name   = 'radare2-6.2.0-w32.zip'
+                    digest = 'sha256:b06959f8221db6154e4d79051300585c86e9560942219b9e19d53a5114937b44'
+                    browser_download_url = 'https://github.com/radareorg/radare2/releases/download/6.2.0/radare2-6.2.0-w32.zip'
+                },
+                [pscustomobject]@{
+                    name   = 'radare2-6.2.0-w64-arm64.zip'
+                    digest = 'sha256:a5a956b8d9c3e0ff0290584215dcb85bc973866ade5d8247b9df9723c1fdebcf'
+                    browser_download_url = 'https://github.com/radareorg/radare2/releases/download/6.2.0/radare2-6.2.0-w64-arm64.zip'
+                },
+                [pscustomobject]@{
+                    name   = 'radare2-6.2.0-android-sdk.zip'
+                    digest = 'sha256:0000000000000000000000000000000000000000000000000000000000000000'
+                    browser_download_url = 'https://github.com/radareorg/radare2/releases/download/6.2.0/radare2-6.2.0-android-sdk.zip'
+                }
+            )
+        }
+    }
+
+    It 'reads a version from a tag with no v prefix' {
+        Get-ReleaseVersion -Release $script:r2 | Should -Be '6.2.0'
+    }
+
+    It 'selects each of the three Windows archives' {
+        (Select-ReleaseAsset -Release $script:r2 -Name 'radare2-6.2.0-w64.zip').browser_download_url       | Should -BeLike '*-w64.zip'
+        (Select-ReleaseAsset -Release $script:r2 -Name 'radare2-6.2.0-w32.zip').browser_download_url       | Should -BeLike '*-w32.zip'
+        (Select-ReleaseAsset -Release $script:r2 -Name 'radare2-6.2.0-w64-arm64.zip').browser_download_url | Should -BeLike '*-w64-arm64.zip'
+    }
+
+    It 'does not confuse the w64 archive with the w64-arm64 one' {
+        $w64 = Select-ReleaseAsset -Release $script:r2 -Name 'radare2-6.2.0-w64.zip'
+        $w64.name | Should -Not -BeLike '*arm64*'
+    }
+
+    It 'ignores the non-Windows assets in the same release' {
+        { Select-ReleaseAsset -Release $script:r2 -Name 'radare2-6.2.0-w64' } |
+            Should -Throw -ExpectedMessage '*found 0*'
+    }
+
+    It 'reads the checksum of each architecture from its digest' {
+        $w32 = Select-ReleaseAsset -Release $script:r2 -Name 'radare2-6.2.0-w32.zip'
+        Get-AssetChecksum -Asset $w32 |
+            Should -Be 'b06959f8221db6154e4d79051300585c86e9560942219b9e19d53a5114937b44'
+    }
+}
