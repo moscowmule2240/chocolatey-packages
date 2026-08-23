@@ -17,8 +17,8 @@
   In CI this is invoked from the repo root by .github/workflows/update-radare2.yml.
 #>
 Import-Module AU
-Import-Module (Join-Path $PSScriptRoot '..' 'scripts' 'ChocoUpdate.psm1')   -Force
-Import-Module (Join-Path $PSScriptRoot '..' 'scripts' 'GitHubRelease.psm1') -Force
+Import-Module (Join-Path $PSScriptRoot '../scripts/ChocoUpdate.psm1')   -Force
+Import-Module (Join-Path $PSScriptRoot '../scripts/GitHubRelease.psm1') -Force
 
 $ErrorActionPreference = 'Stop'
 

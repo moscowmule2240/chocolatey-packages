@@ -16,7 +16,7 @@
     <projectSourceUrl>https://github.com/radareorg/radare2</projectSourceUrl>
     <docsUrl>https://book.rada.re/</docsUrl>
     <bugTrackerUrl>https://github.com/radareorg/radare2/issues</bugTrackerUrl>
-    <tags>radare2 analysis debugger decompiler disassembler forensics security reverse-engineering foss</tags>
+    <tags>radare2 analysis debugger decompiler disassembler forensics security reverse-engineering</tags>
     <summary>radare2 is a scriptable set of tools and libraries for reverse engineering and forensics.</summary>
     <description><![CDATA[
 

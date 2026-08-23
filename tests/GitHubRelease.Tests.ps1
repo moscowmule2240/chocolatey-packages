@@ -1,6 +1,6 @@
 BeforeAll {
-    Import-Module (Join-Path $PSScriptRoot '..' 'scripts' 'ChocoUpdate.psm1')   -Force
-    Import-Module (Join-Path $PSScriptRoot '..' 'scripts' 'GitHubRelease.psm1') -Force
+    Import-Module (Join-Path $PSScriptRoot '../scripts/ChocoUpdate.psm1')   -Force
+    Import-Module (Join-Path $PSScriptRoot '../scripts/GitHubRelease.psm1') -Force
 
     $script:sample = [pscustomobject]@{
         tag_name = 'v1.5.6'

@@ -21,7 +21,7 @@
   .github/workflows/update-antigravity-ide.yml.
 #>
 Import-Module AU
-Import-Module (Join-Path $PSScriptRoot '..' 'scripts' 'ChocoUpdate.psm1') -Force
+Import-Module (Join-Path $PSScriptRoot '../scripts/ChocoUpdate.psm1') -Force
 
 $ErrorActionPreference = 'Stop'
 
