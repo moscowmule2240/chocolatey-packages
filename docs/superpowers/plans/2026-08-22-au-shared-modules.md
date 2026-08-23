@@ -1631,5 +1631,6 @@ PowerShell behaviour difference between platforms cannot hide in the tests."
 Not part of this plan — recorded so it is not lost:
 
 1. Ask the Site Admins to move jadx 1.5.6 from `rejected` back to `submitted`, as the rejection notice describes.
-2. Uncomment `schedule:` in `.github/workflows/update-jadx.yml`.
-3. Watch the first scheduled run through to a Chocolatey push, as was done for antigravity-ide.
+2. **Push 1.5.6 by hand** — `choco pack` then `choco push` from the Windows machine. Uncommenting `schedule:` is not enough: AU only acts on versions newer than the nuspec, and every publishing step is gated on AU having built a `.nupkg`, so a scheduled run would no-op forever while the nuspec sits at the current upstream version.
+3. Uncomment `schedule:` in `.github/workflows/update-jadx.yml`. It takes over from 1.5.7 onwards.
+4. Watch the first run that does find a new version through to a Chocolatey push, as was done for antigravity-ide.

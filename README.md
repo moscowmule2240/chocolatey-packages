@@ -89,6 +89,23 @@ After pushing you'll get emails as it moves through validation → verification 
 virus scan → human review. If a step fails you have up to 35 days to fix and re-push.
 See https://docs.chocolatey.org/en-us/community-repository/moderation/
 
+### The first push of a package is always manual
+
+Enabling `schedule:` is not enough to get a new package onto Chocolatey. AU only
+acts on versions **newer** than the nuspec, and every publishing step in the
+workflows is gated on `steps.pkg.outputs.found == 'true'` — which is only true
+when AU actually built a `.nupkg`. A package whose nuspec already matches the
+current upstream release therefore no-ops on every scheduled run, forever, and
+nothing is ever pushed.
+
+So the first version of a package reaches the repository by hand, with the
+commands above. The workflow takes over from the *next* upstream release onwards.
+
+This applies to `jadx` (nuspec 1.5.6, upstream 1.5.6) and `radare2` (nuspec
+6.2.0, upstream 6.2.0): both are waiting on a maintainer handover, and when that
+completes, uncommenting `schedule:` will not publish them. `typeless` is the
+exception only because its nuspec sits behind upstream.
+
 ## Automation (auto-update on a schedule)
 
 A package can keep itself up to date via a GitHub Actions workflow under

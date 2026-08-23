@@ -82,6 +82,10 @@ Process.
   `radare2/`, or the README's own instructions come back as false positives.
 - The CI `Test install / uninstall` step only runs when AU produced a `.nupkg`,
   so a package whose nuspec already matches upstream gets no install coverage
-  from CI — test it on a real Windows machine.
+  from CI — test it on a real Windows machine. The same gate governs publishing,
+  which is why **6.2.0 has to be pushed by hand once the handover completes**:
+  AU only acts on versions newer than the nuspec, so a scheduled run would
+  no-op forever. See "The first push of a package is always manual" in the repo
+  README. The workflow takes over from 6.2.2 onwards.
 - When re-testing after a fix, run `choco pack` again. `choco install -s .`
   installs from the `.nupkg` in the directory, not from the working tree.

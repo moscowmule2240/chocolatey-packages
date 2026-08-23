@@ -785,6 +785,7 @@ Not part of this plan — recorded so the sequence is not lost:
 
 1. Open a GitHub issue on `GustavoLCR/Chocolatey-Packages` describing the gap, and send the Contact Maintainers message from the radare2 package page. Record both dates.
 2. Wait seven days. If there is no reply, contact the Site Admins.
-3. Once maintainer access is granted, uncomment `schedule:` and watch the first run through to a Chocolatey push.
+3. Once maintainer access is granted, **push 6.2.0 by hand** — `choco pack` then `choco push` from the Windows machine. Uncommenting `schedule:` is not enough: AU only acts on versions newer than the nuspec, so with the nuspec at 6.2.0 and upstream at 6.2.0 a scheduled run no-ops forever.
+4. Then uncomment `schedule:`, which takes over from 6.2.2 onwards, and watch the first run that finds a new version through to a push.
 
 This is deliberately after verification, unlike the jadx handover, where the issue went out before the package had ever been installed and the first Windows test then found a bug.
