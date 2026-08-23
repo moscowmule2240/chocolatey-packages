@@ -9,6 +9,7 @@ packages — one folder per package.
 |---------|-------------|---------|
 | [`antigravity-ide`](antigravity-ide/) | Google Antigravity IDE (editor surface) | [package README](antigravity-ide/README.md) |
 | [`jadx`](jadx/) | JADX — Dex to Java decompiler (CLI + GUI) | [package README](jadx/README.md) |
+| [`radare2`](radare2/) | radare2 — reverse engineering framework and toolset | [package README](radare2/README.md) |
 | [`typeless`](typeless/) | Typeless — AI voice dictation for Windows | [package README](typeless/README.md) |
 
 ## Repo layout
