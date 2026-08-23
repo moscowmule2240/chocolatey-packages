@@ -51,6 +51,27 @@ Scoop takes the other approach — a hand-written `bin` list — and it has drif
 four binaries behind the archive it installs: `r2pm`, `r2r`, `rafs2` and
 `rapatch2` are missing there. `r2pm` is radare2's own plugin manager.
 
+## Verified on Windows, 2026-08-23
+
+Against 6.2.0 with `choco install radare2 --version 6.2.0 -s . -y --force`:
+
+| Case | Result |
+| --- | --- |
+| x64 install | selects `radare2-6.2.0-w64.zip`; `r2 -v` reports `windows-x86_64` |
+| `--x86` on the same x64 machine | selects `radare2-6.2.0-w32.zip`; `r2 -v` reports `windows-x86_32` |
+| Shims | 17 — sixteen created by ShimGen from `bin/*.exe`, plus the explicit `r2` |
+| `r2pm`, `r2r`, `rafs2`, `rapatch2` | present — these are the four Scoop's hand-written list omits |
+| `choco uninstall radare2 -y` | all 17 gone, though only `r2` is removed explicitly |
+
+Two design choices were confirmed rather than assumed by this run. The automatic
+shims really do cover every `.exe` in the extracted archive, so enumerating them
+here would have been redundant — and they are removed with the package, so the
+one-line uninstall script is sufficient. And `--x86` really does need the
+explicit `$env:chocolateyForceX86` check: the branch picked the 32-bit archive on
+a 64-bit machine only because that test comes first.
+
+The arm64 branch remains unverified — no Windows-on-ARM hardware was available.
+
 ## Maintenance notes
 
 - Checksums come from each release asset's `digest` field, so a version bump
