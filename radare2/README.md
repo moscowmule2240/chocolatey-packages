@@ -62,8 +62,11 @@ four binaries behind the archive it installs: `r2pm`, `r2r`, `rafs2` and
 - The icon points at the upstream CDN copy rather than a file in this repository:
   `radareorg/radare.org` carries no license file, so redistributing the logo would
   be on unclear terms.
-- CPMR0010 is a plain string match: never write a Chocolatey install command in
-  these scripts, not even inside a comment.
+- CPMR0010 is a plain string match for `cinst`, `choco install` and `choco upgrade`:
+  never write one in `tools/*.ps1`, not even inside a comment. It applies to the
+  packaged scripts, and `<files>` packages `tools\**` only — so the install
+  commands in this README are outside its reach. Scan `radare2/tools/`, not
+  `radare2/`, or the README's own instructions come back as false positives.
 - The CI `Test install / uninstall` step only runs when AU produced a `.nupkg`,
   so a package whose nuspec already matches upstream gets no install coverage
   from CI — test it on a real Windows machine.
