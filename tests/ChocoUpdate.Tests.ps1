@@ -1,5 +1,5 @@
 BeforeAll {
-    Import-Module (Join-Path $PSScriptRoot '..' 'scripts' 'ChocoUpdate.psm1') -Force
+    Import-Module (Join-Path $PSScriptRoot '../scripts/ChocoUpdate.psm1') -Force
 }
 
 Describe 'Get-DualArchSearchReplace' {

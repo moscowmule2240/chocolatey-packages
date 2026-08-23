@@ -19,7 +19,7 @@ param(
 $ErrorActionPreference = 'SilentlyContinue'
 
 $pageUrl = "https://community.chocolatey.org/packages/$PackageId/$PackageVersion"
-$logDir  = Join-Path $PSScriptRoot '..' 'logs'
+$logDir  = Join-Path $PSScriptRoot '../logs'
 $logFile = Join-Path $logDir 'pushed-versions.log'
 
 try {
