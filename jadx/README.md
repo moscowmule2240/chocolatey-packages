@@ -68,7 +68,10 @@ without a JDK.
 - The CI `Test install / uninstall` step only runs when AU produced a `.nupkg`,
   which means it is skipped whenever the nuspec already matches upstream. A new
   package therefore gets no install coverage from CI on its first commit — test
-  it on a real Windows machine before trusting it.
+  it on a real Windows machine before trusting it. The same gate governs
+  publishing: AU only acts on versions newer than the nuspec, so the version the
+  nuspec already carries is pushed by hand. See "The first push of a package is
+  always manual" in the repo README.
 - When re-testing after a fix, run `choco pack` again. `choco install -s .`
   installs from the `.nupkg` in the directory, not from the working tree, so a
   stale package silently reproduces the bug you just fixed.

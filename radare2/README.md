@@ -69,6 +69,9 @@ four binaries behind the archive it installs: `r2pm`, `r2r`, `rafs2` and
   `radare2/`, or the README's own instructions come back as false positives.
 - The CI `Test install / uninstall` step only runs when AU produced a `.nupkg`,
   so a package whose nuspec already matches upstream gets no install coverage
-  from CI — test it on a real Windows machine.
+  from CI — test it on a real Windows machine. The same gate governs publishing:
+  AU only acts on versions newer than the nuspec, so a scheduled run no-ops
+  while the nuspec matches upstream. See "The first push of a package is always
+  manual" in the repo README.
 - When re-testing after a fix, run `choco pack` again. `choco install -s .`
   installs from the `.nupkg` in the directory, not from the working tree.
