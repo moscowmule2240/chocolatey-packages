@@ -62,8 +62,11 @@ following the Chocolatey Package Triage Process.
   with every release.
 - Shims are registered explicitly with `Install-BinFile` and must be removed
   explicitly with `Uninstall-BinFile`.
-- CPMR0010 is a plain string match: never write a Chocolatey install command in
-  these scripts, not even inside a comment or a warning message.
+- CPMR0010 is a plain string match for `cinst`, `choco install` and `choco upgrade`:
+  never write one in `tools/*.ps1`, not even inside a comment or a warning message.
+  It applies to the packaged scripts, and `<files>` packages `tools\**` only — so
+  the install commands in this README are outside its reach. Scan `jadx/tools/`,
+  not `jadx/`, or the README's own instructions come back as false positives.
 - **Never pipe `java -version` through `2>&1`.** It writes to stderr even when it
   succeeds, and under `$ErrorActionPreference = 'Stop'` each captured line
   becomes an ErrorRecord that aborts the install — so a working JDK fails the
