@@ -6,9 +6,11 @@ name: Update typeless
 
 on:
   workflow_dispatch: {}        # manual run
-  # Scheduled runs are off. Uncomment the two lines below to enable them.
-  # schedule:
-  #   - cron: "*/5 * * * *"    # every 5 minutes
+  # */5 is GitHub's minimum cron interval (every 5 min); scheduled runs are
+  # best-effort and may be delayed under load. A run only pushes when upstream
+  # has a version newer than the nuspec.
+  schedule:
+    - cron: "*/5 * * * *"    # every 5 minutes
 
 permissions:
   contents: write              # commit the version bump back
