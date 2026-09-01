@@ -103,8 +103,9 @@ commands above. The workflow takes over from the *next* upstream release onwards
 
 This applies to `jadx` (nuspec 1.5.6, upstream 1.5.6) and `radare2` (nuspec
 6.2.0, upstream 6.2.0): both are waiting on a maintainer handover, and when that
-completes, uncommenting `schedule:` will not publish them. `typeless` is the
-exception only because its nuspec sits behind upstream.
+completes, uncommenting `schedule:` will not publish them. `typeless` was the
+exception only because its nuspec sits behind upstream, so enabling its schedule
+after 2.1.0 was approved does publish the next release.
 
 ## Automation (auto-update on a schedule)
 
@@ -114,7 +115,7 @@ A package can keep itself up to date via a GitHub Actions workflow under
 | Package | Workflow | Schedule |
 |---------|----------|----------|
 | antigravity-ide | [`update-antigravity-ide.yml`](.github/workflows/update-antigravity-ide.yml) | every 5 min |
-| typeless | [`update-typeless.yml`](.github/workflows/update-typeless.yml) | **paused** — manual only until the first publish is approved |
+| typeless | [`update-typeless.yml`](.github/workflows/update-typeless.yml) | every 5 min — enabled 2026-09-01, when 2.1.0 was approved |
 
 Each run — on the schedule in the table above, or manual via *Actions → Run workflow*
 — does the following on a `windows-latest` runner:
@@ -143,8 +144,9 @@ Each run — on the schedule in the table above, or manual via *Actions → Run 
 Until that secret exists the workflow runs fine but **skips the push** (it logs a
 warning). Also do the **first publish manually** (see *Publish* above) — AU only
 acts on versions *newer* than the nuspec, so it never pushes the version already in
-the nuspec; it takes over from the next upstream release onward. (`typeless` is at
-that stage now; `antigravity-ide` is published and auto-updating.)
+the nuspec; it takes over from the next upstream release onward. (`jadx` and
+`radare2` are at that stage now; `antigravity-ide` and `typeless` are published and
+auto-updating.)
 
 ## Conventions & notes
 

@@ -6,13 +6,12 @@ name: Update typeless
 
 on:
   workflow_dispatch: {}        # manual run
-  # Auto-update is PAUSED until typeless is first published and approved on the
-  # Chocolatey community feed (the first push has to be done by hand - see the
-  # repo README). AU only acts on versions newer than the nuspec, so until then a
-  # schedule would just no-op every few minutes. Re-enable by uncommenting once
-  # the initial submission is approved.
-  # schedule:
-  #   - cron: "*/5 * * * *"    # every 5 minutes
+  # Auto-update enabled 2026-09-01 (typeless 2.1.0 approved on the Chocolatey
+  # community feed). */5 is GitHub's minimum cron interval (every 5 min); scheduled
+  # runs are best-effort and may be delayed under load. A run only pushes when a newer
+  # upstream version exists, so it no-ops until Typeless ships a version > the nuspec.
+  schedule:
+    - cron: "*/5 * * * *"    # every 5 minutes
 
 permissions:
   contents: write              # commit the version bump back
