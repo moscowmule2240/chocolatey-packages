@@ -103,10 +103,12 @@ commands above. The workflow takes over from the *next* upstream release onwards
 
 This applied to `jadx`: after the maintainer handover, the corrected 1.5.6 was
 pushed by hand on 2026-09-14 and the schedule was enabled once it was approved.
-It still applies to `radare2` (nuspec 6.2.0, upstream 6.2.2): 6.2.0 has to be
-pushed by hand first, and only then does the schedule pick up 6.2.2. `typeless`
-was the exception only because its nuspec sat behind upstream, so enabling its
-schedule after 2.1.0 was approved did publish the next release.
+`radare2` went the other way: a manual push of 6.2.0 was refused with 409
+Conflict on 2026-09-17 although no such version is visible on the feed, so the
+schedule was enabled with the nuspec still at 6.2.0 and upstream at 6.2.2 — the
+newer upstream version is what makes the scheduled run publish. `typeless` was
+the same case: its nuspec sat behind upstream, so enabling its schedule after
+2.1.0 was approved did publish the next release.
 
 ## Automation (auto-update on a schedule)
 
@@ -118,6 +120,7 @@ A package can keep itself up to date via a GitHub Actions workflow under
 | antigravity-ide | [`update-antigravity-ide.yml`](.github/workflows/update-antigravity-ide.yml) | every 5 min |
 | typeless | [`update-typeless.yml`](.github/workflows/update-typeless.yml) | every 5 min — enabled 2026-09-01, when 2.1.0 was approved |
 | jadx | [`update-jadx.yml`](.github/workflows/update-jadx.yml) | every 5 min — enabled 2026-09-17, after the handover and the manual push of 1.5.6 |
+| radare2 | [`update-radare2.yml`](.github/workflows/update-radare2.yml) | every 5 min — enabled 2026-09-17, after the handover; the first submission (6.2.2) is made by the workflow |
 
 Each run — on the schedule in the table above, or manual via *Actions → Run workflow*
 — does the following on a `windows-latest` runner:
@@ -146,9 +149,9 @@ Each run — on the schedule in the table above, or manual via *Actions → Run 
 Until that secret exists the workflow runs fine but **skips the push** (it logs a
 warning). Also do the **first publish manually** (see *Publish* above) — AU only
 acts on versions *newer* than the nuspec, so it never pushes the version already in
-the nuspec; it takes over from the next upstream release onward. (`radare2` is at
-that stage now; `antigravity-ide`, `typeless` and `jadx` are published and
-auto-updating.)
+the nuspec; it takes over from the next upstream release onward. (All four
+packages are past that stage; `radare2`'s first submission is 6.2.2 from the
+workflow, see above.)
 
 ## Conventions & notes
 

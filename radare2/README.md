@@ -62,7 +62,16 @@ was ever submitted. The package source contains no updater for stable releases �
 only a script that pulled AppVeyor artifacts to publish `-git` snapshots, pinned
 to a 2017 toolchain — so every stable release was published by hand until that
 stopped. Maintenance was transferred following the Chocolatey Package Triage
-Process.
+Process: the Site Admins added this account as a co-maintainer on 2026-09-17,
+two weeks after an earlier offer from another user had gone nowhere.
+
+A manual `choco push` of 6.2.0 was then refused with `409 Conflict`, although
+`/packages/radare2/6.2.0` returns 404, the OData feed lists nothing newer than
+5.4.2, and no verification gist exists for it — so the version is blocked on the
+server for a reason the response does not disclose (the body is IIS's generic
+409 page). Rather than chase it, the schedule was enabled with the nuspec still
+at 6.2.0: upstream was already at 6.2.2, so the first scheduled run builds and
+submits that instead.
 
 ## Verified on Windows, 2026-08-23
 
@@ -107,10 +116,10 @@ The arm64 branch remains unverified — no Windows-on-ARM hardware was available
   `radare2/`, or the README's own instructions come back as false positives.
 - The CI `Test install / uninstall` step only runs when AU produced a `.nupkg`,
   so a package whose nuspec already matches upstream gets no install coverage
-  from CI — test it on a real Windows machine. The same gate governs publishing,
-  which is why **6.2.0 has to be pushed by hand once the handover completes**:
-  AU only acts on versions newer than the nuspec, so a scheduled run would
-  no-op forever. See "The first push of a package is always manual" in the repo
-  README. The workflow takes over from 6.2.2 onwards.
+  from CI — test it on a real Windows machine. The same gate governs publishing:
+  AU only acts on versions newer than the nuspec, so a scheduled run no-ops
+  while the nuspec matches upstream. See "The first push of a package is always
+  manual" in the repo README. Here the manual push of 6.2.0 was refused (see
+  History), and the workflow made the first submission with 6.2.2 instead.
 - When re-testing after a fix, run `choco pack` again. `choco install -s .`
   installs from the `.nupkg` in the directory, not from the working tree.

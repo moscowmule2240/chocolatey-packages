@@ -7,12 +7,15 @@ name: Update radare2
 on:
   workflow_dispatch:
 
-  # Disabled until the maintainer handover for the existing radare2 package
-  # completes. The id is currently held by another maintainer, so a scheduled
-  # run would build packages this repository cannot push. See
-  # docs/superpowers/specs/2026-08-23-radare2-package-design.md.
-  # schedule:
-  #   - cron: "*/5 * * * *"    # every 5 minutes
+  # Auto-update enabled 2026-09-17, once this account became a maintainer of
+  # radare2 on the Chocolatey community feed. A manual push of 6.2.0 was refused
+  # with 409 Conflict even though no such version is visible on the feed, so the
+  # first submission is left to this workflow: the nuspec sits at 6.2.0 and
+  # upstream is at 6.2.2, which is newer, so AU builds and pushes it. */5 is
+  # GitHub's minimum cron interval (every 5 min); scheduled runs are best-effort
+  # and may be delayed under load.
+  schedule:
+    - cron: "*/5 * * * *"    # every 5 minutes
 
 permissions:
   contents: write              # commit the version bump back
