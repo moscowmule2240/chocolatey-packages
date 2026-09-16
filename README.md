@@ -101,11 +101,12 @@ nothing is ever pushed.
 So the first version of a package reaches the repository by hand, with the
 commands above. The workflow takes over from the *next* upstream release onwards.
 
-This applies to `jadx` (nuspec 1.5.6, upstream 1.5.6) and `radare2` (nuspec
-6.2.0, upstream 6.2.0): both are waiting on a maintainer handover, and when that
-completes, uncommenting `schedule:` will not publish them. `typeless` was the
-exception only because its nuspec sits behind upstream, so enabling its schedule
-after 2.1.0 was approved does publish the next release.
+This applied to `jadx`: after the maintainer handover, the corrected 1.5.6 was
+pushed by hand on 2026-09-14 and the schedule was enabled once it was approved.
+It still applies to `radare2` (nuspec 6.2.0, upstream 6.2.2): 6.2.0 has to be
+pushed by hand first, and only then does the schedule pick up 6.2.2. `typeless`
+was the exception only because its nuspec sat behind upstream, so enabling its
+schedule after 2.1.0 was approved did publish the next release.
 
 ## Automation (auto-update on a schedule)
 
@@ -116,6 +117,7 @@ A package can keep itself up to date via a GitHub Actions workflow under
 |---------|----------|----------|
 | antigravity-ide | [`update-antigravity-ide.yml`](.github/workflows/update-antigravity-ide.yml) | every 5 min |
 | typeless | [`update-typeless.yml`](.github/workflows/update-typeless.yml) | every 5 min — enabled 2026-09-01, when 2.1.0 was approved |
+| jadx | [`update-jadx.yml`](.github/workflows/update-jadx.yml) | every 5 min — enabled 2026-09-17, after the handover and the manual push of 1.5.6 |
 
 Each run — on the schedule in the table above, or manual via *Actions → Run workflow*
 — does the following on a `windows-latest` runner:
@@ -144,8 +146,8 @@ Each run — on the schedule in the table above, or manual via *Actions → Run 
 Until that secret exists the workflow runs fine but **skips the push** (it logs a
 warning). Also do the **first publish manually** (see *Publish* above) — AU only
 acts on versions *newer* than the nuspec, so it never pushes the version already in
-the nuspec; it takes over from the next upstream release onward. (`jadx` and
-`radare2` are at that stage now; `antigravity-ide` and `typeless` are published and
+the nuspec; it takes over from the next upstream release onward. (`radare2` is at
+that stage now; `antigravity-ide`, `typeless` and `jadx` are published and
 auto-updating.)
 
 ## Conventions & notes

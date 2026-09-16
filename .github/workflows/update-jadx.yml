@@ -7,12 +7,14 @@ name: Update jadx
 on:
   workflow_dispatch:
 
-  # Disabled until the maintainer handover for the existing jadx package
-  # completes. The id is currently held by another maintainer, so a scheduled
-  # run would build packages this repository cannot push. See
-  # docs/superpowers/specs/2026-08-22-au-shared-modules-design.md.
-  # schedule:
-  #   - cron: "*/5 * * * *"    # every 5 minutes
+  # Auto-update enabled 2026-09-17, once this account became the sole maintainer
+  # of jadx on the Chocolatey community feed (the corrected 1.5.6 was approved on
+  # 2026-09-14 and pushed by hand). */5 is GitHub's minimum cron interval (every
+  # 5 min); scheduled runs are best-effort and may be delayed under load. A run
+  # only pushes when a newer upstream version exists, so it no-ops until jadx
+  # ships a version > the nuspec.
+  schedule:
+    - cron: "*/5 * * * *"    # every 5 minutes
 
 permissions:
   contents: write              # commit the version bump back

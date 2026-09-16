@@ -50,7 +50,11 @@ Versions 1.5.3 and 1.5.6 were both closed by the moderation bot after their
 verification runs failed: the package depended on `javaruntime [8,9)`, and the
 Oracle JRE 8 installer hung during the silent install and hit the 2700-second
 execution timeout, taking jadx down with it. Maintenance was transferred
-following the Chocolatey Package Triage Process.
+following the Chocolatey Package Triage Process: this account was added as a
+co-maintainer on 2026-09-01, the corrected 1.5.6 was approved on 2026-09-14
+(the verifier has no JDK and took the warning path), and the previous
+maintainer was removed on 2026-09-17 so that their still-running AppVeyor
+updater could no longer resubmit the old dependency.
 
 ## Maintenance notes
 
@@ -78,10 +82,11 @@ following the Chocolatey Package Triage Process.
   which means it is skipped whenever the nuspec already matches upstream. A new
   package therefore gets no install coverage from CI on its first commit — test
   it on a real Windows machine before trusting it. The same gate governs
-  publishing, which is why **1.5.6 has to be pushed by hand once the handover
-  completes**: AU only acts on versions newer than the nuspec, so uncommenting
-  `schedule:` would no-op forever. See "The first push of a package is always
-  manual" in the repo README. The workflow takes over from 1.5.7 onwards.
+  publishing, which is why **1.5.6 was pushed by hand** on 2026-09-14: AU only
+  acts on versions newer than the nuspec, so uncommenting `schedule:` alone would
+  have no-oped forever. See "The first push of a package is always manual" in the
+  repo README. The schedule was enabled on 2026-09-17 and takes over from 1.5.7
+  onwards.
 - When re-testing after a fix, run `choco pack` again. `choco install -s .`
   installs from the `.nupkg` in the directory, not from the working tree, so a
   stale package silently reproduces the bug you just fixed.
