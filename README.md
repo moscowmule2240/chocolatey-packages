@@ -111,6 +111,7 @@ A package can keep itself up to date via a GitHub Actions workflow under
 | antigravity-ide | [`update-antigravity-ide.yml`](.github/workflows/update-antigravity-ide.yml) | every 5 min |
 | typeless | [`update-typeless.yml`](.github/workflows/update-typeless.yml) | every 5 min |
 | jadx | [`update-jadx.yml`](.github/workflows/update-jadx.yml) | every 5 min |
+| radare2 | [`update-radare2.yml`](.github/workflows/update-radare2.yml) | every 5 min |
 
 Each run — on the schedule in the table above, or manual via *Actions → Run workflow*
 — does the following on a `windows-latest` runner:
@@ -139,9 +140,7 @@ Each run — on the schedule in the table above, or manual via *Actions → Run 
 Until that secret exists the workflow runs fine but **skips the push** (it logs a
 warning). Also do the **first publish manually** (see *Publish* above) — AU only
 acts on versions *newer* than the nuspec, so it never pushes the version already in
-the nuspec; it takes over from the next upstream release onward. (`radare2` is at
-that stage now; `antigravity-ide`, `typeless` and `jadx` are published and
-auto-updating.)
+the nuspec; it takes over from the next upstream release onward.
 
 ## Conventions & notes
 
