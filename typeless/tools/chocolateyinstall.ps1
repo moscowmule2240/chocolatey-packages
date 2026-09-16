@@ -3,10 +3,10 @@
 # Per-architecture installers. Kept in sync by ../update.ps1 (AU).
 # The checksums are the sha512 digests published in upstream's own electron-builder
 # update feeds (latest.yml / arm64.yml) - the same ones the app's updater verifies.
-$url64         = 'https://typeless-static.com/desktop-release/Typeless-2.6.0-x64-Setup.exe'
-$checksum64    = '939b103c9c97ce88b903f265efccd08af6fe2330aa394fba7a9078a0e8eec4398cc6036065425970a12d4fa5c6a899b417ae35aa250df1476c7adcc18dc7ae35'
-$urlArm64      = 'https://typeless-static.com/desktop-release/Typeless-2.6.0-arm64-Setup.exe'
-$checksumArm64 = '6f61774009f2c3fc47f4da700dd5b96be01af0124dfae0b5c010649907a8b6854f569ec86e1153bf08e6bc549b0636e7e549cabc938ece9ab8ea4454f7c8017b'
+$url64         = 'https://typeless-static.com/desktop-release/Typeless-2.7.0-x64-Setup.exe'
+$checksum64    = '109c2cfe0ceb9bd0b6f40102ea63a899ec8ad041c5499407fda66dfcec5dd5366a01cdabf80261aeb4315257a22ac200aacfe017c491922336dd5f3bd70101b0'
+$urlArm64      = 'https://typeless-static.com/desktop-release/Typeless-2.7.0-arm64-Setup.exe'
+$checksumArm64 = '03f2bf1c5bdab2f890c9341a32d603bf54b82349366dc364c80648b4409f1b47443de1a7c77b7c63ab6f17d0d9ab6510070fe0ce0cb91b3da988ac3955792d96'
 
 # Detect ARM64 even when Chocolatey runs as an x64 (emulated) process on ARM hardware.
 $isArm64 = ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') -or ($env:PROCESSOR_ARCHITEW6432 -eq 'ARM64')
