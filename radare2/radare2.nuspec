@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>radare2</id>
-    <version>6.2.0</version>
+    <version>6.2.2</version>
     <packageSourceUrl>https://github.com/moscowmule2240/chocolatey-packages/tree/main/radare2</packageSourceUrl>
     <owners>moscowmule2240</owners>
 
