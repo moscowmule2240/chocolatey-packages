@@ -65,13 +65,17 @@ stopped. Maintenance was transferred following the Chocolatey Package Triage
 Process: the Site Admins added this account as a co-maintainer on 2026-09-17,
 two weeks after an earlier offer from another user had gone nowhere.
 
-A manual `choco push` of 6.2.0 was then refused with `409 Conflict`, although
-`/packages/radare2/6.2.0` returns 404, the OData feed lists nothing newer than
-5.4.2, and no verification gist exists for it — so the version is blocked on the
-server for a reason the response does not disclose (the body is IIS's generic
-409 page). Rather than chase it, the schedule was enabled with the nuspec still
-at 6.2.0: upstream was already at 6.2.2, so the first scheduled run builds and
-submits that instead.
+Every `choco push` was then refused with `409 Conflict` — 6.2.0 by hand and
+6.2.2 from CI — although neither version existed on the feed and the response
+body was only IIS's generic 409 page. The Site Admins pointed at the nuspec, and
+that was it: the description carried over from the previous package was 6,894
+characters, and **CPMR0026 (description over 4,000 characters) is a Requirement
+that the push endpoint enforces up front**, reporting it as a bare 409. The
+previous 7,164-character description had been approved in 2021, before that
+check existed server-side. The description was rewritten (1,651 characters,
+package-specific instead of a copy of the upstream README) and the workflow
+now runs the community validation rules before AU, so a nuspec that would be
+refused fails the build with the rule name instead of a 409 from the push.
 
 ## Verified on Windows, 2026-08-23
 
@@ -121,5 +125,12 @@ The arm64 branch remains unverified — no Windows-on-ARM hardware was available
   while the nuspec matches upstream. See "The first push of a package is always
   manual" in the repo README. Here the manual push of 6.2.0 was refused (see
   History), and the workflow made the first submission with 6.2.2 instead.
+- **Keep the description under 4,000 characters** (CPMR0026, a Requirement).
+  The push endpoint enforces it and answers with a bare `409 Conflict` — the
+  same status it uses for a duplicate version — so a long description looks
+  like a version clash until you measure it. The workflow's `Validate nuspec`
+  step runs the [community validation extension](https://community.chocolatey.org/packages/chocolatey-community-validation.extension)
+  through `choco pack` on every run and repeats any `CPMR` line as a GitHub
+  error annotation, so this is caught before a push is attempted.
 - When re-testing after a fix, run `choco pack` again. `choco install -s .`
   installs from the `.nupkg` in the directory, not from the working tree.

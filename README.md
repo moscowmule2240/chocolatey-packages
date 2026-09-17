@@ -103,12 +103,13 @@ commands above. The workflow takes over from the *next* upstream release onwards
 
 This applied to `jadx`: after the maintainer handover, the corrected 1.5.6 was
 pushed by hand on 2026-09-14 and the schedule was enabled once it was approved.
-`radare2` went the other way: a manual push of 6.2.0 was refused with 409
-Conflict on 2026-09-17 although no such version is visible on the feed, so the
-schedule was enabled with the nuspec still at 6.2.0 and upstream at 6.2.2 — the
-newer upstream version is what makes the scheduled run publish. `typeless` was
-the same case: its nuspec sat behind upstream, so enabling its schedule after
-2.1.0 was approved did publish the next release.
+`radare2` went the other way: its first submission came from the workflow.
+The manual push of 6.2.0 was refused with 409 Conflict — which turned out to be
+CPMR0026, a description over 4,000 characters, reported by the push endpoint as
+a bare 409 — and by the time that was fixed the schedule was already enabled
+with the nuspec at 6.2.0 and upstream at 6.2.2, so the scheduled run published
+6.2.2. `typeless` was the same shape: its nuspec sat behind upstream, so
+enabling its schedule after 2.1.0 was approved did publish the next release.
 
 ## Automation (auto-update on a schedule)
 
