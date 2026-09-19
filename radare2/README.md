@@ -98,6 +98,8 @@ The arm64 branch remains unverified — no Windows-on-ARM hardware was available
   AU only acts on versions newer than the nuspec, so a scheduled run no-ops
   while the nuspec matches upstream. See "The first push of a package is always
   manual" in the repo README.
+- The title is `radare2 - Reverse Engineering Framework` rather than the bare id:
+  CPMR0050 (title matches id exactly) is a Guideline.
 - **Keep the description under 4,000 characters** (CPMR0026, a Requirement).
   The push endpoint enforces it and answers with a bare `409 Conflict` — the
   same status it uses for a duplicate version — so a long description looks

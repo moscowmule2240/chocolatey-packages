@@ -6,7 +6,7 @@
     <packageSourceUrl>https://github.com/moscowmule2240/chocolatey-packages/tree/main/radare2</packageSourceUrl>
     <owners>moscowmule2240</owners>
 
-    <title>radare2</title>
+    <title>radare2 - Reverse Engineering Framework</title>
     <authors>radare org</authors>
     <projectUrl>https://rada.re</projectUrl>
     <iconUrl>https://cdn.jsdelivr.net/gh/radareorg/radare.org/img/r2.svg</iconUrl>
