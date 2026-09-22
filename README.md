@@ -31,7 +31,10 @@ scripts/
 └── GitHubRelease.psm1               # shared: GitHub Releases as an update source
 
 tests/                               # Pester tests for the shared modules
-.github/workflows/                   # one CI workflow per automated package, plus Tests
+.github/workflows/
+├── _update-package.yml              # shared: the update job every package calls
+├── update-<package-id>.yml          # per package: schedule, concurrency, secret
+└── test.yml                         # Pester tests for the shared modules
 ```
 
 The two modules under `scripts/` hold what every `update.ps1` would otherwise
@@ -103,8 +106,15 @@ commands above. The workflow takes over from the *next* upstream release onwards
 
 ## Automation (auto-update on a schedule)
 
-A package can keep itself up to date via a GitHub Actions workflow under
-`.github/workflows/` — one per package:
+A package keeps itself up to date through a short workflow,
+`.github/workflows/update-<package-id>.yml`, that calls the shared job in
+`.github/workflows/_update-package.yml`. The per-package file holds only what
+differs between packages: the schedule, the concurrency group,
+`permissions: contents: write` for the version-bump commit, and `CHOCO_API_KEY`
+passed explicitly under `secrets:`. Adding a package means adding such a file:
+copy an existing caller, replace the package id everywhere it appears — `name`,
+the header comment, `concurrency.group` and `with.package` — and rewrite the
+schedule comment for the new package. Then add the package to the table below.
 
 | Package | Workflow | Schedule |
 |---------|----------|----------|
@@ -116,22 +126,27 @@ A package can keep itself up to date via a GitHub Actions workflow under
 Each run — on the schedule in the table above, or manual via *Actions → Run workflow*
 — does the following on a `windows-latest` runner:
 
-1. installs the [Chocolatey **AU**](https://github.com/chocolatey-community/chocolatey-au) module
+1. **checks what the calling workflow supplies** (`Preflight`): the run fails at
+   once if `CHOCO_API_KEY` is empty or the run cannot push to the repository
+   (`git push --dry-run`). Both are otherwise used only when a new version is
+   built, so a caller that left either out would stay green until the next
+   upstream release,
+2. installs the [Chocolatey **AU**](https://github.com/chocolatey-community/chocolatey-au) module
    and the [community validation extension](https://community.chocolatey.org/packages/chocolatey-community-validation.extension),
-2. **validates the committed nuspec** against the community repository's rules by
+3. **validates the committed nuspec** against the community repository's rules by
    packing it into a scratch directory — every run, including the ones where no new
    version exists. A Requirement violation fails the run with the rule, e.g.
    `ERROR: CPMR0026: The description has a length of 6,894 characters`, repeated as
    a GitHub error annotation. Without this, the push endpoint reports the same
    violation as a bare `409 Conflict` (see `radare2/README.md`). Guidelines are not
    reported here; they arrive with the moderation emails,
-3. runs the package's `update.ps1` — detects the latest upstream version, and if
+4. runs the package's `update.ps1` — detects the latest upstream version, and if
    it's newer than the nuspec, rewrites the install script's `url`/`checksum` +
    the nuspec `<version>` and repacks the `.nupkg`,
-4. test-installs and uninstalls the new package,
-5. checks whether that version is already on Chocolatey.org (`scripts/Check-ChocolateyStatus.ps1`),
-6. **pushes** it (only if `CHOCO_API_KEY` is set — see below), and
-7. commits the version bump back to the repo with `[skip ci]`.
+5. test-installs and uninstalls the new package,
+6. checks whether that version is already on Chocolatey.org (`scripts/Check-ChocolateyStatus.ps1`),
+7. **pushes** it, and
+8. commits the version bump back to the repo with `[skip ci]`.
 
 > Neither package needs a **scraping service**: antigravity-ide reads its installer
 > URLs straight off the official download page, and typeless reads the version from
@@ -145,8 +160,8 @@ Each run — on the schedule in the table above, or manual via *Actions → Run 
    New repository secret*, name **`CHOCO_API_KEY`**. (This is something only you
    can do — never paste the key into code or commits.)
 
-Until that secret exists the workflow runs fine but **skips the push** (it logs a
-warning). Also do the **first publish manually** (see *Publish* above) — AU only
+Until that secret exists every run fails at the `Preflight` step. Also do the
+**first publish manually** (see *Publish* above) — AU only
 acts on versions *newer* than the nuspec, so it never pushes the version already in
 the nuspec; it takes over from the next upstream release onward.
 
