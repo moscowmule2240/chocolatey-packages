@@ -42,6 +42,36 @@ jobs:
           # 'AU' is the Chocolatey Automatic Updater (provides Import-Module AU).
           Install-PSResource -Name AU -TrustRepository
           choco install checksum -y --no-progress
+          # Runs the community repository's nuspec rules (CPMR*) inside
+          # 'choco pack', which AU calls - so a nuspec that the push endpoint
+          # would refuse (e.g. CPMR0026, description over 4000 characters)
+          # fails the build here instead of surfacing as a bare 409 Conflict
+          # from push.chocolatey.org.
+          choco install chocolatey-community-validation.extension -y --no-progress
+
+      # Validates the nuspec as committed, on every run - including the runs
+      # where AU finds nothing new and never packs. The package is built into a
+      # scratch directory so that 'Detect built package' below does not mistake
+      # it for an AU build and try to publish the current version. Rule output
+      # is repeated as GitHub error annotations so it shows at the top of the
+      # run summary.
+      - name: Validate nuspec against community repository rules
+        run: |
+          $out = Join-Path $env:RUNNER_TEMP 'nuspec-validation'
+          New-Item -ItemType Directory -Path $out -Force | Out-Null
+          Push-Location $env:PKG_DIR
+          # stdout only: choco reports rule results there, and redirecting
+          # stderr would turn any stderr line into a terminating ErrorRecord.
+          & choco pack --outputdirectory $out | Tee-Object -Variable log
+          $code = $LASTEXITCODE
+          Pop-Location
+          Remove-Item -Recurse -Force $out -ErrorAction SilentlyContinue
+          if ($code -ne 0) {
+            $log | Where-Object { "$_" -match 'CPMR\d{4}' } |
+              ForEach-Object { Write-Host "::error::$("$_".Trim())" }
+            Write-Error "nuspec failed community validation (choco pack exit $code) - see the rule output above"
+            exit 1
+          }
 
       - name: Run AU update (detect + repack if newer)
         env:

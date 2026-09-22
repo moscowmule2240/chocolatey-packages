@@ -116,14 +116,22 @@ A package can keep itself up to date via a GitHub Actions workflow under
 Each run — on the schedule in the table above, or manual via *Actions → Run workflow*
 — does the following on a `windows-latest` runner:
 
-1. installs the [Chocolatey **AU**](https://github.com/chocolatey-community/chocolatey-au) module,
-2. runs the package's `update.ps1` — detects the latest upstream version, and if
+1. installs the [Chocolatey **AU**](https://github.com/chocolatey-community/chocolatey-au) module
+   and the [community validation extension](https://community.chocolatey.org/packages/chocolatey-community-validation.extension),
+2. **validates the committed nuspec** against the community repository's rules by
+   packing it into a scratch directory — every run, including the ones where no new
+   version exists. A Requirement violation fails the run with the rule, e.g.
+   `ERROR: CPMR0026: The description has a length of 6,894 characters`, repeated as
+   a GitHub error annotation. Without this, the push endpoint reports the same
+   violation as a bare `409 Conflict` (see `radare2/README.md`). Guidelines are not
+   reported here; they arrive with the moderation emails,
+3. runs the package's `update.ps1` — detects the latest upstream version, and if
    it's newer than the nuspec, rewrites the install script's `url`/`checksum` +
    the nuspec `<version>` and repacks the `.nupkg`,
-3. test-installs and uninstalls the new package,
-4. checks whether that version is already on Chocolatey.org (`scripts/Check-ChocolateyStatus.ps1`),
-5. **pushes** it (only if `CHOCO_API_KEY` is set — see below), and
-6. commits the version bump back to the repo with `[skip ci]`.
+4. test-installs and uninstalls the new package,
+5. checks whether that version is already on Chocolatey.org (`scripts/Check-ChocolateyStatus.ps1`),
+6. **pushes** it (only if `CHOCO_API_KEY` is set — see below), and
+7. commits the version bump back to the repo with `[skip ci]`.
 
 > Neither package needs a **scraping service**: antigravity-ide reads its installer
 > URLs straight off the official download page, and typeless reads the version from
