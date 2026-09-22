@@ -82,8 +82,10 @@ jobs:
           $out = Join-Path $env:RUNNER_TEMP 'nuspec-validation'
           New-Item -ItemType Directory -Path $out -Force | Out-Null
           Push-Location $env:PKG_DIR
-          # stdout only: choco reports rule results there, and redirecting
-          # stderr would turn any stderr line into a terminating ErrorRecord.
+          # Capture stdout only: choco writes the rule results there. stderr is
+          # left uncaptured and still reaches the step log. Merging it with 2>&1
+          # would also be safe: since pwsh 7.2, $ErrorActionPreference does not
+          # apply to redirected native-command stderr.
           & choco pack --outputdirectory $out | Tee-Object -Variable log
           $code = $LASTEXITCODE
           Pop-Location
@@ -179,9 +181,16 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "$env:PKG_DIR" logs
-          if (git diff --staged --quiet) {
+          # PowerShell's if tests a command's output, not its exit code, so the
+          # exit code is read explicitly: 0 = nothing staged, 1 = changes.
+          git diff --staged --quiet
+          $diff = $LASTEXITCODE
+          if ($diff -eq 0) {
             Write-Host "No source changes to commit."
-          } else {
+          } elseif ($diff -eq 1) {
             git commit -m "Auto-update $env:PKG_ID to $env:PKG_VERSION [skip ci]"
             git push
+          } else {
+            Write-Error "git diff --staged failed (exit $diff)"
+            exit 1
           }
