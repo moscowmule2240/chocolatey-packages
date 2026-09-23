@@ -39,8 +39,9 @@ messages:
 
 - Design specs, implementation plans, reports, task lists and notes on work in progress.
   They live in `docs/superpowers/`, which is git-ignored; in the main checkout it is a
-  symbolic link to a folder outside the repository. A worktree has no
-  `docs/superpowers/`: write through the main checkout's path. A skill that says to
+  symbolic link to a folder outside the repository. A local `post-checkout` hook links
+  it into each new worktree; without the hook, write through the main checkout's path.
+  Removing a worktree removes only the link. A skill that says to
   commit a spec or a plan (for example superpowers brainstorming and writing-plans) does
   not apply here: save the file and leave it uncommitted.
 - Personal names — previous maintainers, moderators, the owner — and any account of how
