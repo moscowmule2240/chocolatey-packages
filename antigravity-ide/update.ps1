@@ -3,12 +3,8 @@
 
   Detects the latest Antigravity IDE version directly from the official download
   page. The real per-arch installer URLs are embedded as plain string literals
-  in that page's HTML, so we can read them with a plain web request - no
-  ScraperAPI / paid API key needed.
-
-  (Until ~2026-07-20 the page was a JavaScript SPA that hid the URLs inside a
-  content-hashed main-*.js bundle, requiring a two-step scrape. The site was
-  rebuilt on Astro and now ships the URLs in the download page itself.)
+  in that page's HTML, so a plain web request reads them - no ScraperAPI / paid
+  API key needed.
 
   Keeps BOTH the windows-x64 and windows-arm64 url/checksum in sync (the package
   picks the right one at install time), plus the nuspec <version>.

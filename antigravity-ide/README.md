@@ -34,9 +34,7 @@ matches the `windows-x64` and `windows-arm64`
 `.../antigravity/stable/<version>-<build>/.../Antigravity%20IDE.exe` URLs directly in
 the page, takes `<version>` from the x64 match, and re-hashes both binaries on a new
 release (hashing happens in `au_BeforeUpdate`, so the ~230 MB downloads only occur on a
-real update). Until ~2026-07-20 the page was a JavaScript SPA that hid those URLs in a
-content-hashed `main-*.js` bundle and needed a two-step scrape; the site was rebuilt on
-Astro and that bundle no longer exists.
+real update).
 
 Both regexes are anchored to `$Stable` —
 `https://edgedl.me.gvt1.com/edgedl/release2/j0qc3/antigravity/stable` — so the match

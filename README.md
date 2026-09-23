@@ -115,8 +115,10 @@ when AU actually built a `.nupkg`. A package whose nuspec already matches the
 current upstream release therefore no-ops on every scheduled run, forever, and
 nothing is ever pushed.
 
-So the first version of a package reaches the repository by hand, with the
-commands above. The workflow takes over from the *next* upstream release onwards.
+So the version the nuspec carries reaches the repository by hand, with the
+commands above, and the workflow publishes from the *next* upstream release.
+A nuspec that is already behind upstream is the exception: the first scheduled
+run builds and publishes the newer release.
 
 ## Automation (auto-update on a schedule)
 
@@ -127,8 +129,8 @@ differs between packages: the schedule, the concurrency group,
 `permissions: contents: write` for the version-bump commit, and `CHOCO_API_KEY`
 passed explicitly under `secrets:`. Adding a package means adding such a file:
 copy an existing caller, replace the package id everywhere it appears — `name`,
-the header comment, `concurrency.group` and `with.package` — and rewrite the
-schedule comment for the new package. Then add the package to the table below.
+the header comment, `concurrency.group` and `with.package`. Then add the
+package to the table below.
 
 | Package | Workflow | Schedule |
 |---------|----------|----------|
@@ -177,7 +179,7 @@ Each run — on the schedule in the table above, or manual via *Actions → Run 
 Until that secret exists every run fails at the `Preflight` step. Also do the
 **first publish manually** (see *Publish* above) — AU only
 acts on versions *newer* than the nuspec, so it never pushes the version already in
-the nuspec; it takes over from the next upstream release onward.
+the nuspec; it publishes from the next upstream release onward.
 
 ## Conventions & notes
 

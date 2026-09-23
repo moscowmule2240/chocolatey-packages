@@ -14,15 +14,13 @@ vendor's servers at install time.
 
 ## nuspec metadata URLs
 
-Moderation on 2.1.0 suggested (not required) adding `docsUrl`, `mailingListUrl`,
-`bugTrackerUrl` and `projectSourceUrl`. Only `docsUrl` applies here — Typeless is
-closed-source commercial software with no public issue tracker or mailing list, so
-the other three have nothing legitimate to point at and are deliberately omitted.
-(`https://www.typeless.com/contact` is a contact form, not an issue tracker.)
+Of the optional `docsUrl`, `mailingListUrl`, `bugTrackerUrl` and `projectSourceUrl`,
+only `docsUrl` applies here — Typeless is closed-source commercial software with no
+public issue tracker or mailing list, so the other three have nothing legitimate to
+point at and are deliberately omitted. (`https://www.typeless.com/contact` is a
+contact form, not an issue tracker.)
 
-Human review of 2.1.0 (approved 2026-09-01) suggested, also as optional, adding
-`trial` and `license` tags so the tag list matches the licensing disclosure in the
-description. Both were added; they ship with the next version AU builds.
+The `trial` and `license` tags match the licensing disclosure in the description.
 
 ## Upstream layout
 

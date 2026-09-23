@@ -32,8 +32,7 @@ packaged as `zed-editor`.
 For an existing package, judge whether it is maintained:
 
 - **Tracking upstream**: the latest approved version, or a version waiting in
-  moderation, matches the latest upstream release or trails it by days (as `zed-editor`
-  does, within a day).
+  moderation, matches the latest upstream release or trails it by days.
 - **Behind upstream**: upstream releases from weeks ago were neither approved nor
   submitted. A rejected submission counts as not submitted; the version history hides
   it, but `https://community.chocolatey.org/packages/<id>/<version>` returns 200.

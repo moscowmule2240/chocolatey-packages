@@ -14,8 +14,7 @@ also carries `r2blob`, `wasi`, `ios-sdk` and `android-sdk` archives, so
 
 ## Architectures
 
-Three, where Scoop covers two. Upstream builds `w64-arm64` and no Windows
-package manager was shipping it, so a Windows-on-ARM machine had no packaged radare2 at all.
+Three: `w64`, `w32` and `w64-arm64`. Scoop covers the first two only.
 
 `Install-ChocolateyZipPackage` accepts one 32-bit and one 64-bit URL and cannot
 express a third, so the install script selects the archive itself. Two

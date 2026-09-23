@@ -35,8 +35,7 @@ packaged under another id, or be waiting in moderation.
 5. Follow moderation (below).
 6. After the first approval, add automation: copy an existing
    `.github/workflows/update-jadx.yml` to `update-<id>.yml`; replace the id in `name`,
-   the header comment, `concurrency.group` and `with.package`; rewrite the schedule
-   comment; add the package to the Packages and Automation tables in `README.md`. Commit
+   the header comment, `concurrency.group` and `with.package`; add the package to the Packages and Automation tables in `README.md`. Commit
    it and land it on `main` as `AGENTS.md` describes. Pushing it needs the person's
    go-ahead: the schedule starts with the push, and a run publishes a newer upstream
    version that is not yet on the community repository. Once it is on `origin`, and
@@ -81,4 +80,3 @@ documentation reserves that for fixing approved packages, and it hides the cause
 - `Waiting for Maintainer`: 20 days without a response brings a warning, 15 more an
   automatic rejection. Draft an answer for the review comments on the package page; the
   person posts it, or approves posting it.
-- Updates to an approved package are often approved the same day.

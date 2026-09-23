@@ -8,3 +8,6 @@
 *.log
 # ...but keep the automation's push history (committed by the workflow)
 !logs/pushed-versions.log
+
+# Design specs, plans and reports stay local (see AGENTS.md)
+docs/superpowers/

@@ -7,12 +7,14 @@ file holds the rules every change follows.
 ## Map
 
 - `<package-id>/` — one directory per package: the nuspec, `tools/` (install scripts),
-  `update.ps1` (AU updater) and `README.md` (upstream, history, verification).
+  `update.ps1` (AU updater) and `README.md` (upstream, maintenance notes, verification).
 - `scripts/` — PowerShell modules shared by the updaters; `tests/` — their Pester tests.
 - `.github/workflows/_update-package.yml` — the update job every package runs;
   `update-<package-id>.yml` — each package's caller (schedule, concurrency, secret);
   `test.yml` — the Pester suite.
-- `docs/superpowers/` — design specs and implementation plans.
+- `docs/superpowers/` — design specs, implementation plans and reports. Git-ignored:
+  kept only in the main checkout, never committed. Write them there, not in a worktree,
+  which is removed with everything ignored in it.
 
 ## Rules
 
@@ -25,6 +27,8 @@ file holds the rules every change follows.
 - Commits are signed. If signing fails, ask for the signing agent to be unlocked;
   never disable signing.
 - Text committed here — comments, docs, commit messages — is English, without a first person.
+  It describes the current state and what to do next: no personal names, no account of
+  how a package came to be maintained here, no task lists.
 - `tools/*.ps1` runs under Windows PowerShell 5.1; `update.ps1` and `scripts/` run under
   PowerShell 7. The language limits differ.
 - Tests: `Invoke-Pester ./tests` (CI runs the same on `windows-latest`).

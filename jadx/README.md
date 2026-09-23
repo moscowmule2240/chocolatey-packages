@@ -9,9 +9,9 @@ Releases: <https://github.com/skylot/jadx/releases>
 
 The package installs `jadx-<version>.zip`, the standard release archive that
 carries both `bin/jadx` and `bin/jadx-gui`. The `-with-jre-win` archive is not
-used: no distribution that was checked ships it — Scoop, Homebrew and the
-previous Chocolatey package all use the standard archive — and it would add
-~25 MB of JRE for users who almost always already have Java.
+used: no distribution that was checked ships it — Scoop and Homebrew both use
+the standard archive — and it would add ~25 MB of JRE for users who almost
+always already have Java.
 
 ## Java
 
@@ -38,6 +38,10 @@ dependency resolution matches on package id and can only see packages Chocolatey
 itself manages. Probing `java.exe` on PATH finds the runtime regardless of which
 tool installed it.
 
+A `javaruntime` dependency would also fail verification: the Oracle JRE 8
+installer hangs during the silent install until the verifier's 2,700-second
+execution timeout.
+
 The install script detects Java and prints a warning when it is missing or older
 than 11. It does not fail the installation: unpacking and shim registration do
 not need Java, and failing there would break the Chocolatey verifier, which runs
@@ -61,10 +65,9 @@ without a JDK.
 - **Never pipe `java -version` through `2>&1`.** It writes to stderr even when it
   succeeds, and under `$ErrorActionPreference = 'Stop'` each captured line
   becomes an ErrorRecord that aborts the install — so a working JDK fails the
-  package. Use `Start-Process -RedirectStandardError` and read the file. This was
-  shipped broken once, on 2026-08-22: the shims were registered and then the
-  install died on `openjdk version "21.0.11"`, which is a healthy JDK. The same
-  applies to any native command whose normal output goes to stderr.
+  package (the install dies on `openjdk version "21.0.11"`, a healthy JDK). Use
+  `Start-Process -RedirectStandardError` and read the file. The same applies to
+  any native command whose normal output goes to stderr.
 - The CI `Test install / uninstall` step only runs when AU produced a `.nupkg`,
   which means it is skipped whenever the nuspec already matches upstream. A new
   package therefore gets no install coverage from CI on its first commit — test
@@ -89,4 +92,4 @@ Against 1.5.6 with `choco install jadx --version 1.5.6 -s . -y --force`:
 | **No Java on PATH** | **warns, and the install still succeeds** |
 
 The last row is the one that matters: it is the condition the Chocolatey verifier
-runs under, and a failure there is what closed 1.5.3 and 1.5.6.
+runs under.
