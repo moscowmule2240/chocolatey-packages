@@ -9,5 +9,6 @@
 # ...but keep the automation's push history (committed by the workflow)
 !logs/pushed-versions.log
 
-# Design specs, plans and reports stay local (see AGENTS.md)
-docs/superpowers/
+# Design specs, plans and reports stay local (see AGENTS.md). No trailing slash:
+# in a checkout it is a symbolic link, which a directory-only pattern does not match.
+docs/superpowers
