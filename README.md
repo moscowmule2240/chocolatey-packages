@@ -71,14 +71,28 @@ curl -s -o /dev/null -w "%{http_code}\n" https://community.chocolatey.org/packag
 > shows up as 0 results even though the id is already reserved. The `/packages/<id>`
 > page reflects moderation-pending submissions; the feed does not.
 
+Search by the software's name as well
+(`https://community.chocolatey.org/packages?q=<name>`): an id can belong to different
+software — `zed` is the SpiceDB CLI — and the software may already be packaged under
+another id, as the Zed editor is under `zed-editor`.
+
 ## Build & test locally (on Windows)
 
 ```powershell
+choco install chocolatey-community-validation.extension -y   # once per machine
 cd <package-id>
 choco pack                                       # -> <package-id>.<version>.nupkg
 choco install <package-id> -s . -y --force       # test install from the local dir
 choco uninstall <package-id> -y                  # test uninstall
 ```
+
+With the validation extension installed, `choco pack` applies the community
+repository's Requirements and stops on a violation, for example
+`ERROR: CPMR0026: The description has a length of 6,894 characters`. The push endpoint
+reports the same violation only as a bare `409 Conflict`.
+
+Run `choco pack` again after every change: `choco install -s .` installs the `.nupkg`
+in the directory, not the working tree.
 
 ## Publish (moderation)
 
