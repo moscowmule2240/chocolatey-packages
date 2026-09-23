@@ -188,7 +188,13 @@ jobs:
           if ($diff -eq 0) {
             Write-Host "No source changes to commit."
           } elseif ($diff -eq 1) {
+            # Without this check a failed commit is masked: the push that follows
+            # finds nothing new, exits 0, and the step reports success.
             git commit -m "Auto-update $env:PKG_ID to $env:PKG_VERSION [skip ci]"
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "git commit failed (exit $LASTEXITCODE)"
+              exit 1
+            }
             git push
           } else {
             Write-Error "git diff --staged failed (exit $diff)"
