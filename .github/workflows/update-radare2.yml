@@ -4,11 +4,13 @@ name: Update radare2
 
 on:
   workflow_dispatch: {}        # manual run
-  # */5 is GitHub's minimum cron interval (every 5 min); scheduled runs are
-  # best-effort and may be delayed under load. A run only pushes when upstream
-  # has a version newer than the nuspec.
+  # Every 5 minutes (GitHub's minimum interval), starting at minute 3. Each
+  # update-*.yml starts at a different minute, 0-4, so the package workflows do
+  # not all start in the same minute. Scheduled runs are best-effort and may be
+  # delayed under load. A run only pushes when upstream has a version newer than
+  # the nuspec.
   schedule:
-    - cron: "*/5 * * * *"    # every 5 minutes
+    - cron: "3-59/5 * * * *"   # every 5 minutes from minute 3
 
 permissions:
   contents: write              # the job commits the version bump back

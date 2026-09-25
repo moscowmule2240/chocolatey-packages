@@ -35,7 +35,13 @@ packaged under another id, or be waiting in moderation.
 5. Follow moderation (below).
 6. After the first approval, add automation: copy an existing
    `.github/workflows/update-jadx.yml` to `update-<id>.yml`; replace the id in `name`,
-   the header comment, `concurrency.group` and `with.package`; add the package to the Packages and Automation tables in `README.md`. Commit
+   the header comment, `concurrency.group` and `with.package`. Give the schedule its
+   own start minute: set `cron` to `N-59/5 * * * *` and the comment above it to minute
+   N, where N is an offset from 0 to 4 that no other workflow uses
+   (`git grep 'cron:' .github/workflows/update-*.yml`). A 5-minute interval has only
+   those five start minutes: `5-59/5` fires on the same minutes as `0-59/5`. Once all
+   five are taken, share the offset of the package that updates least often. Add the
+   package to the Packages and Automation tables in `README.md`. Commit
    it and land it on `main` as `AGENTS.md` describes. Pushing it needs the person's
    go-ahead: the schedule starts with the push, and a run publishes a newer upstream
    version that is not yet on the community repository. Once it is on `origin`, and
