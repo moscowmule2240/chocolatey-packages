@@ -3,12 +3,12 @@ $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
 # Rewritten by ../update.ps1 on every release. The checksums come from the GitHub
 # release assets' digest field, so they are the hashes GitHub itself records.
-$url32         = 'https://github.com/radareorg/radare2/releases/download/6.2.2/radare2-6.2.2-w32.zip'
-$checksum32    = '7a1ff261f62ccdf7d313e77add4b9980f6429ac9682ae354a6eec7c41648e9be'
-$url64         = 'https://github.com/radareorg/radare2/releases/download/6.2.2/radare2-6.2.2-w64.zip'
-$checksum64    = '913e7d95e7458226a5e783240877f2c1d405398ab38ba176ce9b12e046e31f34'
-$urlArm64      = 'https://github.com/radareorg/radare2/releases/download/6.2.2/radare2-6.2.2-w64-arm64.zip'
-$checksumArm64 = '80800fa65310f34d1066841b6b84135470007776b5ef16e8849d331d9f3092f3'
+$url32         = 'https://github.com/radareorg/radare2/releases/download/6.2.4/radare2-6.2.4-w32.zip'
+$checksum32    = '30a65b7ad8b37292345da185a708a4079158a1a5d94e434ad139e9a116a87518'
+$url64         = 'https://github.com/radareorg/radare2/releases/download/6.2.4/radare2-6.2.4-w64.zip'
+$checksum64    = 'aa3454fd89e8a4ead450caff35a1d3919065744e7091540d4913a9487241799d'
+$urlArm64      = 'https://github.com/radareorg/radare2/releases/download/6.2.4/radare2-6.2.4-w64-arm64.zip'
+$checksumArm64 = '6566f55452ebb98adf15b43fc5328ba2467d21597ff59db35f0544db161a2f14'
 
 # Upstream ships three Windows archives. Install-ChocolateyZipPackage takes a
 # 32-bit and a 64-bit url, which cannot express the third, so the archive is
