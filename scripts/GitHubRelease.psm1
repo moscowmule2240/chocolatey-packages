@@ -3,7 +3,7 @@
   a version, an asset, and a checksum.
 
   Routes its HTTP through ChocoUpdate's Get-ValidatedContent so GitHub gets the
-  same retry and diagnostic behaviour as the HTML scrapers.
+  same retry and diagnostic behaviour as the other updaters.
 
   Note on visibility: a nested Import-Module binds into this module's scope, not
   the caller's. Scripts that need both modules import both explicitly.

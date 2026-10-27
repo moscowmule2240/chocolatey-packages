@@ -1,10 +1,10 @@
 <#
   AU (Chocolatey Automatic Updater) script for the antigravity-ide package.
 
-  Detects the latest Antigravity IDE version directly from the official download
-  page. The real per-arch installer URLs are embedded as plain string literals
-  in that page's HTML, so a plain web request reads them - no ScraperAPI / paid
-  API key needed.
+  Detects the latest Antigravity IDE version from the IDE's own update service,
+  the endpoint the installed IDE polls for updates. It answers with JSON that
+  names the per-arch installer URL, so a plain web request reads it - no
+  ScraperAPI / paid API key needed.
 
   Keeps BOTH the windows-x64 and windows-arm64 url/checksum in sync (the package
   picks the right one at install time), plus the nuspec <version>.
@@ -24,38 +24,58 @@ $ErrorActionPreference = 'Stop'
 # AU resolves the .nuspec relative to the current directory.
 Set-Location -Path $PSScriptRoot
 
-$DownloadPage = 'https://antigravity.google/download'
-$Stable       = 'https://edgedl\.me\.gvt1\.com/edgedl/release2/j0qc3/antigravity/stable'
+$UpdateService = 'https://antigravity-ide-auto-updater-974169037036.us-central1.run.app/api/update'
+$Stable        = 'https://edgedl\.me\.gvt1\.com/edgedl/release2/j0qc3/antigravity/stable'
 
-function global:au_GetLatest {
-    # Both per-arch IDE installer URLs are plain string literals in the download
-    # page's HTML, e.g.
-    #   .../stable/2.1.1-6123990880747520/windows-x64/Antigravity%20IDE.exe
-    # The $Stable anchor pins the match to the edgedl .../antigravity/stable/
-    # path so we never pick up the unrelated antigravity-hub build that the same
-    # page links from storage.googleapis.com.
-    #
-    # antigravity.google is served through Google Frontend with a 10-minute
-    # shared edge cache, and it occasionally answers 200 with a body that is
-    # missing the markup we scrape (observed ~3% of CI runs). Get-ValidatedContent
-    # retries those.
-    $urls = Get-ValidatedContent -Uri $DownloadPage -What 'the windows-x64/arm64 installer URLs' -Validate {
-        param($html)
-        $x64 = [regex]::Match($html, "$Stable/(\d+\.\d+\.\d+)-\d+/windows-x64/Antigravity%20IDE\.exe")
-        $arm = [regex]::Match($html, "$Stable/\d+\.\d+\.\d+-\d+/windows-arm64/Antigravity%20IDE\.exe")
-        if (-not ($x64.Success -and $arm.Success)) { return $null }
+# Asks the update service for the latest stable installer of one architecture
+# and returns its version, build number and URL.
+function Get-LatestInstaller([string] $Platform, [string] $Arch) {
+    Get-ValidatedContent -Uri "$UpdateService/$Platform/stable/latest" -What "the $Arch installer URL" -Validate {
+        param($body)
+        try { $url = ($body | ConvertFrom-Json).url } catch { return $null }
+        # The $Stable anchor rejects any URL outside the edgedl
+        # .../antigravity/stable/ path the package installs from. The service
+        # spells the file name with a literal space; the package stores the URL
+        # percent-encoded, the form tools\chocolateyinstall.ps1 keeps it in.
+        # [0-9] rather than \d, which also matches non-ASCII digits.
+        $m = [regex]::Match([string]$url, "^$Stable/([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)/$Arch/Antigravity(?: |%20)IDE\.exe\z")
+        if (-not $m.Success) { return $null }
         @{
-            Version  = $x64.Groups[1].Value
-            URL64    = $x64.Value
-            URLArm64 = $arm.Value
+            Version = $m.Groups[1].Value
+            Build   = $m.Groups[2].Value
+            URL     = $m.Value -replace ' ', '%20'
         }
     }
+}
 
-    return $urls
+function global:au_GetLatest {
+    # The download page at https://antigravity.google/download is not used: its
+    # download links have lagged its own version label (2.5.5 links under a
+    # 2.6.0 label), while the update service already served 2.6.0.
+    #
+    # "-user" is the per-user installer; the system-wide platforms (win32-x64,
+    # win32-arm64) answer HTTP 400 with an empty body. The last path segment is
+    # normally the installed build's commit hash; "latest" matches no build, so
+    # the service answers with the current release.
+    $x64 = Get-LatestInstaller -Platform 'win32-x64-user'   -Arch 'windows-x64'
+    $arm = Get-LatestInstaller -Platform 'win32-arm64-user' -Arch 'windows-arm64'
+
+    # The two answers come from separate requests. During a release rollout
+    # they can name different builds; one package must not mix them, so fail
+    # and let the next scheduled run try again.
+    if ($x64.Version -ne $arm.Version -or $x64.Build -ne $arm.Build) {
+        throw "The update service named different builds: windows-x64 $($x64.Version)-$($x64.Build), windows-arm64 $($arm.Version)-$($arm.Build)"
+    }
+
+    return @{
+        Version  = $x64.Version
+        URL64    = $x64.URL
+        URLArm64 = $arm.URL
+    }
 }
 
 function global:au_BeforeUpdate {
-    # Runs only when a newer version is found, so the ~230 MB installers are
+    # Runs only when a newer version is found, so the ~200 MB installers are
     # downloaded for hashing only on a real update (not on every no-op run).
     $Latest.Checksum64    = Get-RemoteChecksum $Latest.URL64
     $Latest.ChecksumArm64 = Get-RemoteChecksum $Latest.URLArm64

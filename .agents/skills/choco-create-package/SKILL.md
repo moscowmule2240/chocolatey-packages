@@ -18,7 +18,7 @@ packaged under another id, or be waiting in moderation.
 | One architecture-independent zip on GitHub Releases | `jadx/` | `scripts/GitHubRelease.psm1`; warning, not failing, when a runtime (Java) is missing |
 | Per-architecture archives on GitHub Releases | `radare2/` | x64 / x86 / arm64 selection; explicit `--x86`; automatic shims plus one alias |
 | An installer plus an electron-builder update feed | `typeless/` | version and sha512 from the feed; a per-user install |
-| Links on an official download page | `antigravity-ide/` | reading installer URLs from the page |
+| An installer plus a JSON update service | `antigravity-ide/` | installer URLs per architecture from the service; one build for both |
 
 ## Procedure
 

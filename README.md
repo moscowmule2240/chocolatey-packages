@@ -181,7 +181,7 @@ dry run. If upstream has no version newer than the nuspec, nothing is built, and
 run says so with a warning.
 
 > Neither package needs a **scraping service**: antigravity-ide reads its installer
-> URLs straight off the official download page, and typeless reads the version from
+> URLs from the IDE's own update service, and typeless reads the version from
 > electron-builder's `latest.yml` update feed. Version detection is free and key-less
 > for both.
 

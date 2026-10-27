@@ -66,8 +66,8 @@ function Get-ValidatedContent {
         $result = & $Validate $content
         if ($result) { return $result }
 
-        # Keep the tail: the scraped markup sits at the very end of the document,
-        # so a truncated body is the prime suspect and the tail is the evidence.
+        # Keep the tail: a truncated body is the prime suspect, and the tail
+        # shows where it stopped.
         $tail = if ($content.Length -gt 200) { $content.Substring($content.Length - 200) } else { $content }
         $lastProblem = "HTTP $([int]$response.StatusCode), $($content.Length) bytes, ends with: $tail"
     }
