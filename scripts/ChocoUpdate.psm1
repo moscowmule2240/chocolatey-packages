@@ -12,12 +12,12 @@ $script:RetryDelaysSeconds = @(5, 15, 30)
 
 <#
   Fetches $Uri and hands the body to $Validate, which returns the extracted
-  value on success or $null when the body does not contain what we need.
+  value on success or $null when the body does not contain what is needed.
 
   A $null verdict is treated exactly like a failed request: both are retried,
   because a CDN can answer 200 with a body that is empty or truncated. Retries
-  append a cache-buster and ask for a revalidated copy, so we do not just
-  re-read the same bad cached response. Note that Invoke-WebRequest
+  append a cache-buster and ask for a revalidated copy, so the same bad cached
+  response is not just read again. Note that Invoke-WebRequest
   -MaximumRetryCount would not help: it only retries on HTTP error status codes.
 #>
 function Get-ValidatedContent {
@@ -57,19 +57,17 @@ function Get-ValidatedContent {
         }
 
         # Invoke-WebRequest only hands back a [string] Content for text-ish content
-        # types; anything else arrives as [byte[]]. The typeless feeds are served as
-        # application/x-www-form-urlencoded, so they take the byte[] path - and
-        # [string]-casting a byte[] yields "112 100 100 ..." (the decimal values
-        # joined by spaces), not the document. Decode explicitly instead.
+        # types; anything else arrives as [byte[]] (the typeless feeds do, see
+        # typeless/README.md). [string]-casting a byte[] yields "112 100 100 ..."
+        # (the decimal values joined by spaces), not the document. Decode explicitly.
         $raw     = $response.Content
         $content = if ($raw -is [byte[]]) { [System.Text.Encoding]::UTF8.GetString($raw) } else { [string]$raw }
 
         $result = & $Validate $content
         if ($result) { return $result }
 
-        # Keep the tail: the markup we scrape sits at the very end of the
-        # document, so a truncated body is the prime suspect and this is the
-        # evidence that tells us so.
+        # Keep the tail: the scraped markup sits at the very end of the document,
+        # so a truncated body is the prime suspect and the tail is the evidence.
         $tail = if ($content.Length -gt 200) { $content.Substring($content.Length - 200) } else { $content }
         $lastProblem = "HTTP $([int]$response.StatusCode), $($content.Length) bytes, ends with: $tail"
     }
