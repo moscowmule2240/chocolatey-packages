@@ -58,6 +58,10 @@ Rules the answers must pass:
   as a bad answer.
 - Both architectures must name the same `<version>-<build>`. During a rollout the two
   requests can disagree; the run then fails, and the next scheduled run tries again.
+- The answer must carry a 64-hex-digit `sha256hash`. It is the SHA-256 of the `.exe`
+  (despite the answer's `displayName` saying "(.zip)"), and the installed IDE checks
+  its downloads against it. `au_BeforeUpdate` hashes both downloaded installers and
+  fails the run when either differs from the service's value.
 
 Each request goes through the `Get-ValidatedContent` helper: a bad answer is treated
 exactly like a failed request and retried after 5s / 15s / 30s, each retry adding a

@@ -28,22 +28,26 @@ $UpdateService = 'https://antigravity-ide-auto-updater-974169037036.us-central1.
 $Stable        = 'https://edgedl\.me\.gvt1\.com/edgedl/release2/j0qc3/antigravity/stable'
 
 # Asks the update service for the latest stable installer of one architecture
-# and returns its version, build number and URL.
+# and returns its version, build number, URL and SHA-256.
 function Get-LatestInstaller([string] $Platform, [string] $Arch) {
-    Get-ValidatedContent -Uri "$UpdateService/$Platform/stable/latest" -What "the $Arch installer URL" -Validate {
+    Get-ValidatedContent -Uri "$UpdateService/$Platform/stable/latest" -What "the $Arch installer URL and SHA-256" -Validate {
         param($body)
-        try { $url = ($body | ConvertFrom-Json).url } catch { return $null }
+        try { $answer = $body | ConvertFrom-Json } catch { return $null }
+        $url    = [string]$answer.url
+        $sha256 = [string]$answer.sha256hash
         # The $Stable anchor rejects any URL outside the edgedl
         # .../antigravity/stable/ path the package installs from. The service
         # spells the file name with a literal space; the package stores the URL
         # percent-encoded, the form tools\chocolateyinstall.ps1 keeps it in.
         # [0-9] rather than \d, which also matches non-ASCII digits.
-        $m = [regex]::Match([string]$url, "^$Stable/([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)/$Arch/Antigravity(?: |%20)IDE\.exe\z")
+        $m = [regex]::Match($url, "^$Stable/([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)/$Arch/Antigravity(?: |%20)IDE\.exe\z")
         if (-not $m.Success) { return $null }
+        if ($sha256 -notmatch '\A[0-9a-fA-F]{64}\z') { return $null }
         @{
             Version = $m.Groups[1].Value
             Build   = $m.Groups[2].Value
             URL     = $m.Value -replace ' ', '%20'
+            Sha256  = $sha256.ToLowerInvariant()
         }
     }
 }
@@ -68,9 +72,11 @@ function global:au_GetLatest {
     }
 
     return @{
-        Version  = $x64.Version
-        URL64    = $x64.URL
-        URLArm64 = $arm.URL
+        Version            = $x64.Version
+        URL64              = $x64.URL
+        URLArm64           = $arm.URL
+        ServiceSha256      = $x64.Sha256
+        ServiceSha256Arm64 = $arm.Sha256
     }
 }
 
@@ -79,6 +85,16 @@ function global:au_BeforeUpdate {
     # downloaded for hashing only on a real update (not on every no-op run).
     $Latest.Checksum64    = Get-RemoteChecksum $Latest.URL64
     $Latest.ChecksumArm64 = Get-RemoteChecksum $Latest.URLArm64
+
+    # The installed IDE verifies its installer against the service's sha256hash,
+    # so the package does the same: a download that hashes differently is not
+    # the installer the release names, and must not be packaged.
+    if ($Latest.Checksum64 -ne $Latest.ServiceSha256) {
+        throw "windows-x64 installer hashes to $($Latest.Checksum64), the update service names $($Latest.ServiceSha256)"
+    }
+    if ($Latest.ChecksumArm64 -ne $Latest.ServiceSha256Arm64) {
+        throw "windows-arm64 installer hashes to $($Latest.ChecksumArm64), the update service names $($Latest.ServiceSha256Arm64)"
+    }
 }
 
 function global:au_SearchReplace {
@@ -87,6 +103,6 @@ function global:au_SearchReplace {
 
 # Checksums are computed in au_BeforeUpdate, so disable AU's own checksum step.
 # -NoReadme: AU otherwise overwrites the nuspec <description> with the package
-# folder's README.md (minus its first 2 lines). We keep a hand-curated,
+# folder's README.md (minus its first 2 lines). This package keeps a hand-curated,
 # user-facing <description> in the nuspec, so opt out of that behaviour.
 Update-Package -ChecksumFor none -NoReadme
