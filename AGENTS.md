@@ -18,7 +18,8 @@ file holds the rules every change follows.
 ## Rules
 
 - Pushing to `origin`, pushing a package to the community repository (`choco push`),
-  starting a workflow run that can publish (`gh workflow run update-<id>.yml`), and
+  starting a workflow run that can publish (`gh workflow run update-<id>.yml`; for
+  dry runs see `README.md` → "Automation"), and
   anything that reaches other people — issues, pull requests, comments, forms, email —
   need the person's go-ahead each time. A run publishes when upstream is ahead of the
   nuspec and that version is not yet on the community repository.

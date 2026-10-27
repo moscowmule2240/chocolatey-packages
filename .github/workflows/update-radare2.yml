@@ -3,7 +3,12 @@ name: Update radare2
 # Updates the radare2 package. The job is in _update-package.yml.
 
 on:
-  workflow_dispatch: {}        # manual run
+  workflow_dispatch:            # manual run
+    inputs:
+      dry-run:
+        description: Build, validate and test-install only - no push, no commit
+        type: boolean
+        default: false
   # Every 5 minutes (GitHub's minimum interval), starting at minute 3. Each
   # update-*.yml starts at a different minute, 0-4, so the package workflows do
   # not all start in the same minute. Scheduled runs are best-effort and may be
@@ -24,5 +29,8 @@ jobs:
     uses: ./.github/workflows/_update-package.yml
     with:
       package: radare2
+      # Scheduled runs publish. A manual run is a dry run unless dry-run is an
+      # explicit false, so a value GitHub does not read as a boolean never publishes.
+      dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run != false }}
     secrets:
       CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}

@@ -47,7 +47,10 @@ packaged under another id, or be waiting in moderation.
    version that is not yet on the community repository. Once it is on `origin`, and
    again with the person's go-ahead, run it once
    (`gh workflow run update-<id>.yml --ref main`) and confirm `Preflight` and
-   `Validate nuspec against community repository rules` are green.
+   `Validate nuspec against community repository rules` are green. To try a fix to
+   `update.ps1` on Windows before it reaches `main`, push the branch (with the
+   person's go-ahead) and run it with `-f dry-run=true`: everything through the test
+   install and the status check runs, and nothing is pushed or committed.
 
 ## Rules for every package
 

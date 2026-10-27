@@ -5,7 +5,9 @@ name: Update package (reusable)
 # concurrency group, `contents: write` and CHOCO_API_KEY. The job detects a
 # new upstream release with the package's update.ps1, repacks and
 # test-installs it, publishes it to the Chocolatey community feed, and commits
-# the version bump back to the repository.
+# the version bump back to the repository. A dry run stops before the push: it
+# runs everything through the test install and the Chocolatey status check, and
+# neither pushes the package nor commits.
 
 on:
   workflow_call:
@@ -14,6 +16,11 @@ on:
         description: Package directory, which is also the package id.
         required: true
         type: string
+      dry-run:
+        description: Build, validate and test-install, but do not push or commit.
+        required: false
+        type: boolean
+        default: false
     secrets:
       CHOCO_API_KEY:
         required: true
@@ -148,14 +155,34 @@ jobs:
           Write-Host "Status: $s"
           "status=$s" | Out-File $env:GITHUB_OUTPUT -Append
 
+      # A dry run says what it did: without the warning, a run with no newer
+      # upstream version is green although nothing was built or test-installed.
+      - name: Dry run summary
+        if: inputs.dry-run
+        env:
+          PKG_FOUND: ${{ steps.pkg.outputs.found }}
+          PKG_ID: ${{ steps.pkg.outputs.id }}
+          PKG_VERSION: ${{ steps.pkg.outputs.version }}
+          PKG_STATUS: ${{ steps.status.outputs.status }}
+        run: |
+          if ($env:PKG_FOUND -eq 'true') {
+            Write-Host "::notice::Dry run - built and test-installed $env:PKG_ID $env:PKG_VERSION (status $env:PKG_STATUS); not pushed, not committed."
+          } else {
+            Write-Host "::warning::Dry run - upstream has no version newer than the nuspec, so nothing was built or test-installed."
+          }
+
+      # In a dry run the step is skipped, and the key is withheld as well, so a
+      # mistake in the condition fails the push instead of publishing.
       - name: Push to Chocolatey
-        if: steps.pkg.outputs.found == 'true' && steps.status.outputs.status == 'PROCEED_WITH_PUSH'
+        if: ${{ !inputs.dry-run && steps.pkg.outputs.found == 'true' && steps.status.outputs.status == 'PROCEED_WITH_PUSH' }}
         id: push
         env:
-          CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
+          CHOCO_API_KEY: ${{ !inputs.dry-run && secrets.CHOCO_API_KEY || '' }}
           NUPKG_PATH: ${{ steps.pkg.outputs.nupkg }}
         run: |
-          # Preflight has already failed the run if CHOCO_API_KEY is empty.
+          # Preflight has already failed the run if CHOCO_API_KEY is empty;
+          # here it is empty only in a dry run.
+          if (-not $env:CHOCO_API_KEY) { Write-Error "No API key for the push (dry run)"; exit 1 }
           choco push "$env:NUPKG_PATH" --source https://push.chocolatey.org/ --api-key $env:CHOCO_API_KEY
           if ($LASTEXITCODE -ne 0) { Write-Error "choco push failed"; exit 1 }
           "pushed=true" | Out-File $env:GITHUB_OUTPUT -Append
@@ -173,7 +200,7 @@ jobs:
       # version whose push failed is retried on the next run instead of being
       # silently left behind.
       - name: Commit version bump
-        if: steps.pkg.outputs.found == 'true' && (steps.push.outputs.pushed == 'true' || steps.status.outputs.status == 'SKIP_PUSH')
+        if: ${{ !inputs.dry-run && steps.pkg.outputs.found == 'true' && (steps.push.outputs.pushed == 'true' || steps.status.outputs.status == 'SKIP_PUSH') }}
         env:
           PKG_ID: ${{ steps.pkg.outputs.id }}
           PKG_VERSION: ${{ steps.pkg.outputs.version }}

@@ -164,6 +164,22 @@ Each run — on the schedule in the table above, or manual via *Actions → Run 
 7. **pushes** it, and
 8. commits the version bump back to the repo with `[skip ci]`.
 
+A manual run with the `dry-run` input stops before the push: it runs everything
+through the test install and the status check (steps 1-6), and neither pushes the
+package nor commits. Run on a branch, it tries a change on Windows before it reaches
+`main`; the branch has to be on `origin` first:
+
+```bash
+gh workflow run update-<id>.yml --ref <branch> -f dry-run=true
+```
+
+The guard is in the workflow files of the ref that runs. A dry run cannot publish
+when that ref's `.github/workflows/` matches `main`, and then needs no go-ahead; on a
+branch that changes `.github/workflows/`, it is only as safe as that branch's version
+of them, so ask first. Any manual run whose `dry-run` is not an explicit `false` is a
+dry run. If upstream has no version newer than the nuspec, nothing is built, and the
+run says so with a warning.
+
 > Neither package needs a **scraping service**: antigravity-ide reads its installer
 > URLs straight off the official download page, and typeless reads the version from
 > electron-builder's `latest.yml` update feed. Version detection is free and key-less
