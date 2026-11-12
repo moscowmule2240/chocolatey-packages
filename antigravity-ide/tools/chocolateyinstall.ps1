@@ -1,10 +1,10 @@
 ﻿$ErrorActionPreference = 'Stop'
 
 # Per-architecture installers. Kept in sync by ../update.ps1 (AU).
-$url64         = 'https://edgedl.me.gvt1.com/edgedl/release2/j0qc3/antigravity/stable/2.6.0-5526304964083712/windows-x64/Antigravity%20IDE.exe'
-$checksum64    = '116bee6f9a5cddf5aa17b4450728ae3375a7f0bf2d4965d16d9fa2a63b3bebbc'
-$urlArm64      = 'https://edgedl.me.gvt1.com/edgedl/release2/j0qc3/antigravity/stable/2.6.0-5526304964083712/windows-arm64/Antigravity%20IDE.exe'
-$checksumArm64 = '88d8e11b524e6c739535500a865fdf23407d7ef20a37425dfcf3a1aea10f6b7a'
+$url64         = 'https://edgedl.me.gvt1.com/edgedl/release2/j0qc3/antigravity/stable/2.7.0-4507555968450560/windows-x64/Antigravity%20IDE.exe'
+$checksum64    = '307c7a41b050ffe742fd4dd1045050df1464de219271f74b5f6c269e9e00c822'
+$urlArm64      = 'https://edgedl.me.gvt1.com/edgedl/release2/j0qc3/antigravity/stable/2.7.0-4507555968450560/windows-arm64/Antigravity%20IDE.exe'
+$checksumArm64 = '6259973fe1d24d49b925da8333ad6c163d3f655278103db4bcea53cc453640c2'
 
 # Detect ARM64 even when Chocolatey runs as an x64 (emulated) process on ARM hardware.
 $isArm64 = ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') -or ($env:PROCESSOR_ARCHITEW6432 -eq 'ARM64')
