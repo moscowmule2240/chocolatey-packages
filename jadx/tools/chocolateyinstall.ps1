@@ -1,10 +1,10 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
 # Rewritten by ../update.ps1 on every release; the checksum comes from the
 # GitHub release asset's digest field, so it is the hash GitHub itself records.
-$url64      = 'https://github.com/skylot/jadx/releases/download/v1.5.6/jadx-1.5.6.zip'
-$checksum64 = '545ea2be9c242511bc145755cf4bda2485ade42966e096f8b4d3da2a230e8974'
+$url64      = 'https://github.com/skylot/jadx/releases/download/v1.5.7/jadx-1.5.7.zip'
+$checksum64 = '1755e4242ade71a077438723689f404079592ec7764a3a0572f98fef94ebcbf3'
 
 # The archive is Java bytecode and architecture-independent: one artifact serves
 # both x64 and arm64, so only the 64-bit parameters are set.
