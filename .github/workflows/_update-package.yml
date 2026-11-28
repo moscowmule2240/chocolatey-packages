@@ -30,9 +30,16 @@ jobs:
     runs-on: windows-latest
     defaults:
       run:
-        shell: pwsh
+        # Matches the built-in pwsh shell (same .ps1 wrapper,
+        # $ErrorActionPreference = 'stop' and $LASTEXITCODE tail) while adding
+        # -NoProfile so runner or user profiles are never loaded during steps.
+        shell: pwsh -NoProfile -Command ". '{0}'"
     env:
       PKG_DIR: ${{ inputs.package }}
+      AU_VERSION: '2022.10.24'
+      # SHA-256 of the ordinal-sorted "<sha256>  <relative-path>\n" manifest of
+      # AU 2022.10.24's 33 module files (excluding root PSGetModuleInfo.xml).
+      AU_TREE_SHA256: '1561c9c0f28f08f63f7d5eb9c286bf8abca5bbcfdef0155ae7064f3d0793b4b3'
     steps:
       - name: Checkout
         uses: actions/checkout@v6   # current major; Node 24 (v4 ran on the deprecated Node 20)
@@ -63,20 +70,136 @@ jobs:
             exit 1
           }
 
-      - name: Install prerequisites (AU + checksum)
+      # AU has not released since 2022.10.24, while PSGallery intermittently
+      # returns HTTP 403/404 to shared GitHub-hosted runners. Restore before
+      # installing and save right after verification (before choco install or
+      # test-install runs third-party installers) so later steps in this job
+      # cannot modify the cached directory before save or discard a good
+      # install on failure.
+      - name: Resolve AU module path
+        id: au-path
+        run: |
+          $docs = [Environment]::GetFolderPath('MyDocuments')
+          if (-not $docs) {
+            Write-Error "Could not resolve MyDocuments folder for CurrentUser PowerShell modules."
+            exit 1
+          }
+          $dir = [System.IO.Path]::Combine($docs, 'PowerShell', 'Modules', 'AU', $env:AU_VERSION)
+          "dir=$dir" | Out-File $env:GITHUB_OUTPUT -Append
+
+      - name: Restore AU module cache
+        id: au-cache
+        uses: actions/cache/restore@v6   # current major; Node 24
+        with:
+          path: ${{ steps.au-path.outputs.dir }}
+          key: au-v1-${{ runner.os }}-${{ env.AU_VERSION }}-${{ env.AU_TREE_SHA256 }}
+
+      - name: Install AU module
+        env:
+          AU_CACHE_HIT: ${{ steps.au-cache.outputs.cache-hit }}
+          AU_MODULE_DIR: ${{ steps.au-path.outputs.dir }}
         run: |
           Set-ExecutionPolicy Bypass -Scope Process -Force
-          # PSResourceGet (ships in pwsh 7.4+) installs from PSGallery over NuGet v3
-          # natively - no PackageManagement 'NuGet' provider bootstrap needed.
+          # PSResourceGet (ships in pwsh 7.4+) installs from PSGallery without
+          # the legacy PackageManagement NuGet provider bootstrap. Verify the
+          # pinned AU directory tree by SHA-256 before importing so a corrupted
+          # cache or mismatched download is caught before AU is imported.
           # 'AU' is the Chocolatey Automatic Updater (provides Import-Module AU).
-          Install-PSResource -Name AU -TrustRepository
+          $auDir = $env:AU_MODULE_DIR
+          if (-not $auDir) {
+            Write-Error "AU_MODULE_DIR is empty."
+            exit 1
+          }
+
+          function Test-AUModule([string]$Dir) {
+            try {
+              if (-not (Test-Path -LiteralPath $Dir -PathType Container)) { return $false }
+              $root = [System.IO.Path]::TrimEndingDirectorySeparator((Resolve-Path -LiteralPath $Dir).Path)
+              $entries = [System.Collections.Generic.List[string]]::new()
+              foreach ($file in (Get-ChildItem -LiteralPath $root -Recurse -File -Force)) {
+                $rel = [System.IO.Path]::GetRelativePath($root, $file.FullName).Replace('\', '/')
+                if ($rel -eq 'PSGetModuleInfo.xml') { continue }
+                $sha = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+                $entries.Add("$sha  $rel")
+              }
+              if ($entries.Count -eq 0) { return $false }
+              $sorted = $entries.ToArray()
+              [System.Array]::Sort($sorted, [System.StringComparer]::Ordinal)
+              $manifest = ($sorted -join "`n") + "`n"
+              $actual = [System.Convert]::ToHexString(
+                [System.Security.Cryptography.SHA256]::HashData([System.Text.Encoding]::UTF8.GetBytes($manifest))
+              ).ToLowerInvariant()
+              if ($actual -ne $env:AU_TREE_SHA256) {
+                Write-Host "::warning::AU $env:AU_VERSION tree hash mismatch: expected $env:AU_TREE_SHA256, got $actual ($($sorted.Length) files)."
+                return $false
+              }
+              $env:AU_VERIFIED_DIR = $root
+              & pwsh -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command '$avail = @(Get-Module -Name AU -ListAvailable); if ($avail.Count -ne 1) { throw "Expected exactly one available AU module, found $($avail.Count): $($avail.ModuleBase -join '', '')" }; $m = Import-Module -Name AU -RequiredVersion $env:AU_VERSION -PassThru -ErrorAction Stop; if ([System.IO.Path]::TrimEndingDirectorySeparator((Resolve-Path -LiteralPath $m.ModuleBase).Path) -ne $env:AU_VERIFIED_DIR) { throw "Loaded AU from unexpected path: $($m.ModuleBase)" }' | Out-Host
+              return ($LASTEXITCODE -eq 0)
+            } catch {
+              Write-Host "::warning::AU $env:AU_VERSION verification failed: $($_.Exception.Message)"
+              return $false
+            }
+          }
+
+          if (Test-AUModule -Dir $auDir) {
+            if ($env:AU_CACHE_HIT -eq 'true') {
+              Write-Host "AU $env:AU_VERSION restored from cache and verified."
+            } else {
+              Write-Host "AU $env:AU_VERSION already installed and verified."
+            }
+          } else {
+            if ($env:AU_CACHE_HIT -eq 'true') {
+              Write-Host "::warning::Cache hit for AU $env:AU_VERSION failed verification; reinstalling from PSGallery."
+            }
+            $delays   = @(5, 15, 30)
+            $attempts = $delays.Count + 1
+            for ($i = 0; $i -lt $attempts; $i++) {
+              if ($i -gt 0) {
+                $delay = $delays[$i - 1]
+                Write-Host "Retrying AU $env:AU_VERSION install in ${delay}s [$($i + 1)/$attempts]"
+                Start-Sleep -Seconds $delay
+              }
+              try {
+                if (Test-Path -LiteralPath $auDir) {
+                  Remove-Item -LiteralPath $auDir -Recurse -Force
+                }
+                Install-PSResource -Name AU -Version "[$($env:AU_VERSION)]" -Repository PSGallery -Scope CurrentUser -TrustRepository -Reinstall -ErrorAction Stop
+              } catch {
+                if ($i -eq $attempts - 1) { throw }
+                Write-Host "Install-PSResource attempt $($i + 1)/$attempts failed: $($_.Exception.Message)"
+                continue
+              }
+              if (-not (Test-AUModule -Dir $auDir)) {
+                Write-Host "::error::AU $env:AU_VERSION failed verification after Install-PSResource completed."
+                exit 1
+              }
+              break
+            }
+          }
+
+      - name: Save AU module cache
+        # Skip saving when restore returned early without setting
+        # cache-primary-key (e.g. cache backend unavailable), since save@v6
+        # marks key as required.
+        if: steps.au-cache.outputs.cache-hit != 'true' && steps.au-cache.outputs.cache-primary-key != ''
+        uses: actions/cache/save@v6      # current major; Node 24
+        with:
+          path: ${{ steps.au-path.outputs.dir }}
+          key: ${{ steps.au-cache.outputs.cache-primary-key }}
+
+      - name: Install Chocolatey tools (checksum + validation)
+        run: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force
           choco install checksum -y --no-progress
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           # Runs the community repository's nuspec rules (CPMR*) inside
           # 'choco pack', which AU calls - so a nuspec that the push endpoint
           # would refuse (e.g. CPMR0026, description over 4000 characters)
           # fails the build here instead of surfacing as a bare 409 Conflict
           # from push.chocolatey.org.
           choco install chocolatey-community-validation.extension -y --no-progress
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       # Validates the nuspec as committed, on every run - including the runs
       # where AU finds nothing new and never packs. The package is built into a

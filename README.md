@@ -147,8 +147,22 @@ Each run — on the schedule in the table above, or manual via *Actions → Run 
    (`git push --dry-run`). Both are otherwise used only when a new version is
    built, so a caller that left either out would stay green until the next
    upstream release,
-2. installs the [Chocolatey **AU**](https://github.com/chocolatey-community/chocolatey-au) module
-   and the [community validation extension](https://community.chocolatey.org/packages/chocolatey-community-validation.extension),
+2. restores the pinned [Chocolatey **AU**](https://github.com/chocolatey-community/chocolatey-au)
+   module (`AU_VERSION` in `.github/workflows/_update-package.yml`) from the
+   GitHub Actions cache or installs it from PSGallery with retries, verifies the
+   installed tree against `AU_TREE_SHA256` before importing, and installs
+   `checksum` and the
+   [community validation extension](https://community.chocolatey.org/packages/chocolatey-community-validation.extension).
+   `AU_TREE_SHA256` is the lowercase SHA-256 of the UTF-8 manifest of
+   ordinal-sorted `"<sha256>  <relative-path>\n"` lines (using `/` separators
+   and lowercase hex) for every file under the module directory except the root
+   `PSGetModuleInfo.xml` (a mismatch logs `got <hash>`). The cache key embeds
+   `AU_TREE_SHA256`, so updating it invalidates older cached trees; if a cached
+   entry ever needs replacement under the same hash, bump the `au-v1-` key
+   prefix. Because `AU` is frozen at `2022.10.24`, switching to its successor
+   `Chocolatey-AU` requires updating the module name, `AU_VERSION`, path, cache
+   key, `AU_TREE_SHA256`, and the `Import-Module AU` line in each package's
+   `update.ps1` together,
 3. **validates the committed nuspec** against the community repository's rules by
    packing it into a scratch directory — every run, including the ones where no new
    version exists. A Requirement violation fails the run with the rule, e.g.
